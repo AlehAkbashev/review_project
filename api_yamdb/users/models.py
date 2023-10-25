@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 
 
 class User(AbstractUser):
@@ -18,6 +18,7 @@ class User(AbstractUser):
         verbose_name='Role',
         choices=CHOICES
     )
+    confirmation_code = models.TextField(blank=True, null=True)
 
     class Meta:
         verbose_name = 'User'
