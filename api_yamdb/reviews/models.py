@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Categories(models.Model):
@@ -34,3 +37,29 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Comment(models.Model):
+    text = models.TextField(
+        'text',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='author',
+    )
+
+
+class Review(models.Model):
+    name = models.CharField(
+        'Имя',
+        max_length=256,
+    )
+    text = models.CharField(
+        Comment,
+        max_length=256,
+
+    )
+    rating = models.IntegerField(
+
+    )
