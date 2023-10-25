@@ -12,16 +12,16 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, max_length=254)
     username = models.SlugField(unique=True, max_length=150)
     password = models.CharField(blank=True, null=True, max_length=255)
-    bio = models.TextField(blank=True, verbose_name="Биография")
+    bio = models.TextField(blank=True, verbose_name="Biography")
     role = models.SlugField(
         default='user',
-        verbose_name='Роль',
+        verbose_name='Role',
         choices=CHOICES
     )
 
     class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
 
     def __str__(self) -> str:
         return self.username
