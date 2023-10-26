@@ -29,7 +29,7 @@ class Title(models.Model):
         on_delete=models.CASCADE,
         verbose_name='title_categories',
         related_name='categories')
-    genre = models.ManyToManyField(
+    genre = models.ForeignKey(
         Genres,
         on_delete=models.CASCADE,
         verbose_name='title_genres',
