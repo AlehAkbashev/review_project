@@ -1,9 +1,21 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
+from .models import User
+from .serializers import UsersSerializer
 import secrets
 
 
-class 
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    pass
+
+
+class MeViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    pass
+
 
 # create code confirmation
 # send email
