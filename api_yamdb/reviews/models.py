@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Categories(models.Model):
@@ -34,3 +37,46 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Comment(models.Model):
+    text = models.TextField(verbose_name='comment_text')
+    review = models.ForeignKey(
+        'Review',
+        on_delete=models.CASCADE,
+        verbose_name='comment_review',
+        related_name='comments')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='comment_author',
+        related_name='comments')
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='comment_pub_date')
+
+    def __str__(self):
+        return self.text
+
+
+class Review(models.Model):
+    text = models.TextField(verbose_name='review_text')
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name='review_title',
+        related_name='reviews')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='review_author',
+        related_name='reviews')
+    score = models.PositiveIntegerField(
+        verbose_name='review_score',
+        choices=[(i, i) for i in range(1, 11)])
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='review_pub_date')
+
+    def __str__(self):
+        return self.text
