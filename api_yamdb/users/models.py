@@ -1,5 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
+from django.core.exceptions import ValidationError
+
+
+def validate_username(value):
+    if value == 'me':
+        raise ValidationError(
+            "You can't use that username",
+            params={'value': value}
+        )
 
 
 class User(AbstractUser):
@@ -10,7 +19,11 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(unique=True, max_length=254)
-    username = models.SlugField(unique=True, max_length=150)
+    username = models.SlugField(
+        unique=True,
+        max_length=150,
+        validators=[validate_username]
+    )
     password = models.CharField(blank=True, null=True, max_length=255)
     bio = models.TextField(blank=True, verbose_name="Biography")
     role = models.SlugField(
@@ -26,3 +39,7 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.username
+    
+    # def clean(self) -> None:
+    #     if self.username == 'me':
+    #         raise ValidationError("You can't use that username")
