@@ -29,7 +29,7 @@ class Title(models.Model):
         on_delete=models.CASCADE,
         verbose_name='title_categories',
         related_name='categories')
-    genre = models.ManyToManyField(
+    genre = models.ForeignKey(
         Genres,
         on_delete=models.CASCADE,
         verbose_name='title_genres',
@@ -40,6 +40,43 @@ class Title(models.Model):
 
 
 class Comment(models.Model):
+    text = models.TextField(verbose_name='comment_text')
+    review = models.ForeignKey(
+        'Review',
+        on_delete=models.CASCADE,
+        verbose_name='comment_review',
+        related_name='comments')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='comment_author',
+        related_name='comments')
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='comment_pub_date')
+
+    def __str__(self):
+        return self.text
+
+
+class Review(models.Model):
+    text = models.TextField(verbose_name='review_text')
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name='review_title',
+        related_name='reviews')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='review_author',
+        related_name='reviews')
+    score = models.PositiveIntegerField(
+        verbose_name='review_score',
+        choices=[(i, i) for i in range(1, 11)])
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='review_pub_date')
     text = models.TextField(
         'text',
     )
@@ -49,6 +86,8 @@ class Comment(models.Model):
         verbose_name='author',
     )
 
+    def __str__(self):
+        return self.text
 
 class Review(models.Model):
     name = models.CharField(
@@ -58,8 +97,10 @@ class Review(models.Model):
     text = models.CharField(
         Comment,
         max_length=256,
-
     )
     rating = models.IntegerField(
-
     )
+    
+      def __str__(self):
+        return self.text
+
