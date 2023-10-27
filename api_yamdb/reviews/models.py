@@ -77,8 +77,6 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='review_pub_date')
-
- 
     text = models.TextField(
         'text',
     )
@@ -87,8 +85,8 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         verbose_name='author',
     )
-    
-       def __str__(self):
+
+    def __str__(self):
         return self.text
 
 class Review(models.Model):
@@ -99,9 +97,10 @@ class Review(models.Model):
     text = models.CharField(
         Comment,
         max_length=256,
-
     )
     rating = models.IntegerField(
-
     )
+    
+      def __str__(self):
+        return self.text
 
