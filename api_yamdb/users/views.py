@@ -1,10 +1,10 @@
-from django.shortcuts import render
+# from django.shortcuts import render
 from rest_framework import viewsets, mixins, status
 from .models import User
 from .serializers import UsersSerializer, UserRegistrationSerializer
 import secrets
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+# from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+# from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -50,7 +50,5 @@ class MeViewSet(viewsets.ModelViewSet):
 
 
 
-# create code confirmation
-# send email
 # create jwt get token
 # update jwt token

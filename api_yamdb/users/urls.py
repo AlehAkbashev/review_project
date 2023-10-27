@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 from .views import UserViewSet, MeViewSet, user_registration
-from rest_framework_simplejwt.views import TokenObtainPairView
+# from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 router = routers.DefaultRouter()

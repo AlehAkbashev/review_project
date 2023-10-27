@@ -89,6 +89,7 @@ class Review(models.Model):
     def __str__(self):
         return self.text
 
+
 class Review(models.Model):
     name = models.CharField(
         'Имя',
@@ -101,6 +102,6 @@ class Review(models.Model):
     rating = models.IntegerField(
     )
     
-      def __str__(self):
+    def __str__(self):
         return self.text
 
