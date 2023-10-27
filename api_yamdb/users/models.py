@@ -37,9 +37,5 @@ class User(AbstractUser):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.username
-    
-    # def clean(self) -> None:
-    #     if self.username == 'me':
-    #         raise ValidationError("You can't use that username")
