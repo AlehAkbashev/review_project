@@ -8,6 +8,7 @@ from .views import (
     CommentViewSet,
     ReviewViewSet,
     get_patch_me_user,
+    UserViewSet
 )
 
 router_v1 = DefaultRouter()

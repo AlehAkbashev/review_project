@@ -38,13 +38,13 @@ User = get_user_model()
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = permissions.AllowAny
+    permission_classes = (permissions.AllowAny, )
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    permission_classes = permissions.AllowAny
+    permission_classes = (permissions.AllowAny, )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
