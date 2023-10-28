@@ -15,6 +15,9 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_registration(request):
+    superuser = get_object_or_404(User, is_superuser=True)
+
+    if request.data['username'] == superuser.username and request.data
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         confirmation_code = send_email(request.data['email'])
