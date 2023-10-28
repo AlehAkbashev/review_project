@@ -54,6 +54,7 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "TOKEN_OBTAIN_SERIALIZER": "users.serializers.MyTokenObtainPairSerializer"
 }
 
 AUTH_USER_MODEL = 'users.User'

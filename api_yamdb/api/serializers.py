@@ -2,6 +2,9 @@ from rest_framework import serializers
 import datetime as dt
 
 from reviews.models import Categories, Genres, Title, Comment, Review
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -40,3 +43,14 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = '__all__'
+
+
+class UsersSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = User
+        # lookup_field = 'username'
+        # extra_kwargs = {
+        #     'url': {'lookup_field': 'username'}
+        # }

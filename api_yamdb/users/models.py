@@ -1,14 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
-
-
-def validate_username(value):
-    if value == 'me':
-        raise ValidationError(
-            "You can't use that username",
-            params={'value': value}
-        )
+from .validators import validate_username
 
 
 class User(AbstractUser):
@@ -38,4 +30,4 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
 
     def __str__(self) -> str:
-        return self.username
+        return str(self.username)
