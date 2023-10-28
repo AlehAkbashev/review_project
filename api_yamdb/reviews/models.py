@@ -29,14 +29,33 @@ class Title(models.Model):
         on_delete=models.CASCADE,
         verbose_name='title_categories',
         related_name='categories')
-    genre = models.ForeignKey(
+    genre = models.ManyToManyField(
         Genres,
-        on_delete=models.CASCADE,
         verbose_name='title_genres',
         related_name='genres')
 
     def __str__(self):
         return self.name
+
+
+class GenreTitle(models.Model):
+    title_id = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name='genreTitle_titles',
+        related_name='Titlestitles',
+        blank=False
+    )
+    genre_id = models.ForeignKey(
+        Genres,
+        on_delete=models.CASCADE,
+        verbose_name='genreTitle_genres',
+        related_name='Genresgenres',
+        blank=False
+    )
+
+    def __str__(self):
+        return f'{self.title_id} {self.genre_id}'
 
 
 class Comment(models.Model):
@@ -80,5 +99,3 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
-
-
