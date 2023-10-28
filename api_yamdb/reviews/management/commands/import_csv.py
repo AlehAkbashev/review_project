@@ -1,9 +1,17 @@
 import csv
 from django.core.management.base import BaseCommand
-from reviews.models import Categories, Genres, Title, Comment, Review,GenreTitle, User
+from reviews.models import (
+    Categories,
+    Genres,
+    Title,
+    Comment,
+    Review,
+    GenreTitle,
+    User,
+)
+
 
 def import_data():
-
     with open('static/data/users.csv') as csvfile:
         reader = csv.reader(csvfile)
         reader = list(reader)
@@ -18,7 +26,6 @@ def import_data():
                 first_name=row[5],
                 last_name=row[6]
             )
-
 
     with open('static/data/category.csv') as csvfile:
         reader = csv.reader(csvfile)

@@ -1,4 +1,3 @@
-import csv
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -100,5 +99,3 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
-
-

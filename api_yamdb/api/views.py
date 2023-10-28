@@ -1,16 +1,5 @@
-from rest_framework import viewsets
-from rest_framework import viewsets, permissions
 import csv
-from .serializers import (
-  GenresSerializer, 
-  TitleSerializer,
-  CategoriesSerializer,
-  ReviewSerializer,
-  TitleSerializer,
-)
-
-
-
+from rest_framework import viewsets, permissions
 
 from .serializers import (
     GenresSerializer,
@@ -19,7 +8,14 @@ from .serializers import (
     CommentSerializer,
     ReviewSerializer,
 )
-from reviews.models import Genres, Title, Categories, Comment, Review
+from reviews.models import (
+    Genres,
+    Title,
+    Categories,
+    Comment,
+    Review,
+)
+
 
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
@@ -47,4 +43,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-

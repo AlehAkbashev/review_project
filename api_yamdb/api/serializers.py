@@ -1,7 +1,14 @@
 from rest_framework import serializers
 import datetime as dt
 
-from reviews.models import Categories, Genres, GenreTitle, Title, Comment, Review
+from reviews.models import (
+    Categories,
+    Genres,
+    GenreTitle,
+    Title,
+    Comment,
+    Review,
+)
 
 
 class GenresSerializer(serializers.ModelSerializer):
