@@ -54,3 +54,11 @@ class UsersSerializer(serializers.ModelSerializer):
         # extra_kwargs = {
         #     'url': {'lookup_field': 'username'}
         # }
+
+
+class MeSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(read_only=True)
+    
+    class Meta:
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        model = User

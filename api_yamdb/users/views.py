@@ -1,4 +1,3 @@
-# from django.shortcuts import render
 from rest_framework import status
 from .serializers import UserRegistrationSerializer, MyTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
