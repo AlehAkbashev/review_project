@@ -7,6 +7,7 @@ from .views import (
     TitleViewSet,
     CommentViewSet,
     ReviewViewSet,
+    UserViewSet,
     get_patch_me_user,
 )
 
