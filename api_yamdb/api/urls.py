@@ -6,16 +6,21 @@ from .views import (
     GenresViewSet,
     TitleViewSet,
     CommentViewSet,
-    ReviewViewSet
+    ReviewViewSet,
+    get_patch_me_user,
 )
 
 router_v1 = DefaultRouter()
 router_v1.register(r'categories', CategoriesViewSet, basename='categories')
 router_v1.register(r'genres', GenresViewSet, basename='genres')
 router_v1.register(r'titles', TitleViewSet, basename='titles')
+router_v1.register('users', UserViewSet, basename='users')
 router_v1.register(r'comments', CommentViewSet, basename='comments')
 router_v1.register(r'reviews', ReviewViewSet, basename='reviews')
 
+
 urlpatterns = [
-    path('v1/', include(router_v1.urls))
+    path('v1/', include(router_v1.urls)),
+    path('v1/auth/', include('users.urls')),
+    path('v1/users/me/', get_patch_me_user),
 ]

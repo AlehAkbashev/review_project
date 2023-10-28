@@ -1,29 +1,15 @@
-from django.shortcuts import render
-from rest_framework import viewsets, mixins, status
-from .models import User
-from .serializers import UsersSerializer, UserRegistrationSerializer
-import secrets
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from rest_framework import status
+from .serializers import UserRegistrationSerializer, MyTokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from django.core.mail import send_mail
+from .service import send_email
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 
-
-def send_email(mail):
-    conf_code = secrets.token_hex(16)
-    send_mail(
-        subject='Confirmation Code',
-        message=(
-            'Your confirmation code is: \n'
-            f'{conf_code}'
-        ),
-        from_email='support_bot@yamdb.com',
-        recipient_list=['to@example.com'],
-        fail_silently=True,
-    )
-    return conf_code
+User = get_user_model()
 
 
 @api_view(['POST'])
@@ -37,20 +23,18 @@ def user_registration(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UsersSerializer
-    lookup_field = 'username'
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+    permission_classes = (AllowAny,)
 
-
-class MeViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UsersSerializer
-    pass
-
-
-
-# create code confirmation
-# send email
-# create jwt get token
-# update jwt token
+    def post(self, request):
+        user = get_object_or_404(User, username=request.data['username'])
+        serializer = MyTokenObtainPairSerializer(data=request.data)
+        serializer.is_valid()
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                'token': str(refresh.access_token)
+            },
+            status=status.HTTP_200_OK
+        )

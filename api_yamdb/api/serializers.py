@@ -1,6 +1,10 @@
 from rest_framework import serializers
 import datetime as dt
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 from reviews.models import (
     Categories,
     Genres,
@@ -9,6 +13,7 @@ from reviews.models import (
     Comment,
     Review,
 )
+
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -53,3 +58,17 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = '__all__'
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = User
+
+
+class MeSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(read_only=True)
+    
+    class Meta:
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        model = User
