@@ -1,7 +1,7 @@
 from rest_framework import serializers
 import datetime as dt
 
-from reviews.models import Categories, Genres, Title, Comment, Review
+from reviews.models import Categories, Genres, GenreTitle, Title, Comment, Review
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -26,6 +26,12 @@ class TitleSerializer(serializers.ModelSerializer):
         if year > year+1:
             raise serializers.ValidationError("Check year of title")
         return value
+
+
+class GenreTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = GenreTitle
 
 
 class CommentSerializer(serializers.ModelSerializer):
