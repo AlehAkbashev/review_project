@@ -15,23 +15,31 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_registration(request):
-    serializer = UserRegistrationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    email = serializer.data['email']
-    username = serializer.data['username']
-    user, created = User.objects.get_or_create(email=email, username=username)
-    confirmation_code = send_email(request.data['email'], user)
-    User.objects.filter(username=username).update(confirmation_code=confirmation_code)
-    # user.objects.update(confirmation_code=confirmation_code)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-    # serializer = UserRegistrationSerixalizer(data=request.data)
-    # if serializer.is_valid():
-    #     confirmation_code = send_email(request.data['email'])
-    #     serializer.save(confirmation_code=confirmation_code)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(
+            email=request.data['email'],
+            username=request.data['username']
+        )
+        send_email(request.data['email'], user)
+        return Response(
+            request.data,
+            status=status.HTTP_201_CREATED
+        )
+    except User.DoesNotExist:
+        serializer = UserRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        email = serializer.data['email']
+        username = serializer.data['username']
+        user = User.objects.get(
+            email=email,
+            username=username
+        )
+        send_email(request.data['email'], user)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

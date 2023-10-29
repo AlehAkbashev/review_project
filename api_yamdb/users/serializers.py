@@ -12,9 +12,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('email', 'username')
         model = User
-        extra_kwargs = {
-            'email': {'validators': []},
-        }
     
 
 
