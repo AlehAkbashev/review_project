@@ -15,15 +15,23 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_registration(request):
-    superuser = get_object_or_404(User, is_superuser=True)
-
-    # if request.data['username'] == superuser.username and request.data
     serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        confirmation_code = send_email(request.data['email'])
-        serializer.save(confirmation_code=confirmation_code)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.data['email']
+    username = serializer.data['username']
+    user, created = User.objects.get_or_create(email=email, username=username)
+    confirmation_code = send_email(request.data['email'], user)
+    User.objects.filter(username=username).update(confirmation_code=confirmation_code)
+    # user.objects.update(confirmation_code=confirmation_code)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    # serializer = UserRegistrationSerixalizer(data=request.data)
+    # if serializer.is_valid():
+    #     confirmation_code = send_email(request.data['email'])
+    #     serializer.save(confirmation_code=confirmation_code)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
