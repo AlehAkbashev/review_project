@@ -22,7 +22,7 @@ router_v1.register(r'reviews', ReviewViewSet, basename='reviews')
 
 
 urlpatterns = [
+    path('v1/users/me/', get_patch_me_user),
     path('v1/', include(router_v1.urls)),
     path('v1/auth/', include('users.urls')),
-    path('v1/users/me/', get_patch_me_user),
 ]

@@ -2,9 +2,6 @@ from rest_framework import serializers
 import datetime as dt
 
 from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
 from reviews.models import (
     Categories,
     Genres,
@@ -14,6 +11,7 @@ from reviews.models import (
     Review,
 )
 
+User = get_user_model()
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -35,7 +33,7 @@ class TitleSerializer(serializers.ModelSerializer):
     
     def validate_year(self, value):
         year = dt.date.today().year
-        if year > year+1:
+        if year > year + 1:
             raise serializers.ValidationError("Check year of title")
         return value
 
@@ -67,8 +65,25 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(read_only=True)
-    
+    # role = serializers.CharField(read_only=True, default = serializers)
+
     class Meta:
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
         model = User
+
+    def validate_role(self, value):
+        if (
+            self.context.get('request').user.role != 'admin'
+            and not self.context.get('request').user.is_superuser
+        ):
+            raise serializers.ValidationError(
+                "You don't have permission to change ROLE"
+            )
+        return value

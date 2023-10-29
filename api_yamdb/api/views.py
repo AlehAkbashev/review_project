@@ -62,9 +62,16 @@ class UserViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def get_patch_me_user(request):
     if request.method == 'PATCH':
-        user = get_object_or_404(User, username=request.user.username)
-        serializer = MeSerializer(user, data=request.data)
-        serializer.is_valid()
+        user = get_object_or_404(
+            User,
+            username=request.user.username
+        )
+        serializer = MeSerializer(
+            user,
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
