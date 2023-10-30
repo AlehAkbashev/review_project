@@ -30,3 +30,4 @@ class MyTokenObtainPairSerializer(serializers.ModelSerializer):
             if default_token_generator.check_token(user, data['confirmation_code']):
                 raise serializers.ValidationError('Confirmation code does not match')
             return data
+
