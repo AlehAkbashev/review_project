@@ -1,12 +1,17 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
 
 User = get_user_model()
 
 
 class Categories(models.Model):
     name = models.CharField(max_length=256, verbose_name='category_name')
-    slug = models.CharField(max_length=50, verbose_name='category_slug')
+    slug = models.CharField(
+        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$', message="Slug doesnt correct")],
+        max_length=50,
+        verbose_name='category_slug',
+        )
 
     def __str__(self):
         return self.name
@@ -14,7 +19,7 @@ class Categories(models.Model):
 
 class Genres(models.Model):
     name = models.CharField(max_length=256, verbose_name='genres_name')
-    slug = models.CharField(max_length=50, verbose_name='genres_slug')
+    slug = models.CharField(max_length=50, verbose_name='genres_slug', unique=True)
 
     def __str__(self):
         return self.name
