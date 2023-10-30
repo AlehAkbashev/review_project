@@ -2,6 +2,8 @@ from rest_framework import (
     viewsets,
     pagination,
     status,
+    filters,
+    mixins
 )
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -67,6 +69,9 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, AdminAccess)
     pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('username', )
+    http_method_names = ['post', 'patch', 'delete', 'get']
 
     lookup_field = "username"
 
@@ -89,7 +94,8 @@ def get_patch_me_user(request):
         serializer = MeSerializer(
             user,
             data=request.data,
-            context={'request': request}
+            context={'request': request},
+            partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
