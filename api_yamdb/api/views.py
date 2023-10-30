@@ -53,9 +53,9 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriesSerializer
     permission_classes = (ReaderOrAdmin, )
 
-    def create(self, request, *args, **kwargs):
-        slug = self.kwargs.get('slug')
-        return super().create(request, *args, **kwargs)
+    # def create(self, request, *args, **kwargs):
+    #     slug = self.kwargs.get('slug')
+    #     return super().create(request, *args, **kwargs)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
