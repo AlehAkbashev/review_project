@@ -37,13 +37,12 @@ User = get_user_model()
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = [ReaderOrAdmin, AllowAny]
+    permission_classes = (ReaderOrAdmin, )
     pagination_class = PageNumberPagination
-
-    def destroy(self, request, *args, **kwargs):
-        genre = get_object_or_404(Genres, slug=self.kwargs.get('slug'))
-        genre.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    http_method_names = ['get', 'post', 'delete']
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+    lookup_field = 'slug'
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
