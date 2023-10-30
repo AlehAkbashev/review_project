@@ -2,10 +2,9 @@ from rest_framework import (
     viewsets,
     pagination,
     status,
-    filters,
-    mixins
+    filters
 )
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -82,28 +81,27 @@ class UserViewSet(viewsets.ModelViewSet):
         user = User.objects.get(email=email)
         send_email(email, user)
 
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        url_path='me',
+        permission_classes=[IsAuthenticated,],
+        serializer_class=MeSerializer
+    )
+    def get_patch_me_user(self, request):
+        if request.method == 'PATCH':
+            serializer = MeSerializer(
+                request.user,
+                data=request.data,
+                context={'request': request},
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['GET', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def get_patch_me_user(request):
-    if request.method == 'PATCH':
-        user = get_object_or_404(
-            User,
-            username=request.user.username
-        )
-        serializer = MeSerializer(
-            user,
-            data=request.data,
-            context={'request': request},
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer = MeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    user = get_object_or_404(User, username=request.user.username)
-    serializer = MeSerializer(user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
