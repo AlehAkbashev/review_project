@@ -16,7 +16,7 @@ User = get_user_model()
 
 class GenresSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Genres
 
 
