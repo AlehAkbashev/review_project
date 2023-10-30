@@ -49,8 +49,13 @@ class GenresViewSet(viewsets.ModelViewSet):
 class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
+    pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
 
-    permission_classes = (ReaderOrAdmin, AllowAny)
+    permission_classes = (ReaderOrAdmin, )
+
+    http_method_names = ['get', 'post', 'delete']
 
     # def create(self, request, *args, **kwargs):
     #     slug = self.kwargs.get('slug')

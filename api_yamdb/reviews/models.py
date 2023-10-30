@@ -8,10 +8,11 @@ User = get_user_model()
 class Categories(models.Model):
     name = models.CharField(max_length=256, verbose_name='category_name')
     slug = models.CharField(
-        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$', message="Slug doesnt correct")],
+        validators=[RegexValidator(regex=r'^[-a-zA-Z0-9_]+$', message="Slug doesnt correct")],
         max_length=50,
         verbose_name='category_slug',
-        )
+        unique=True
+    )
 
     def __str__(self):
         return self.name
