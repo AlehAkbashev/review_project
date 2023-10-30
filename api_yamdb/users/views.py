@@ -15,12 +15,31 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_registration(request):
-    serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        confirmation_code = send_email(request.data['email'])
-        serializer.save(confirmation_code=confirmation_code)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(
+            email=request.data['email'],
+            username=request.data['username']
+        )
+        send_email(request.data['email'], user)
+        return Response(
+            request.data,
+            status=status.HTTP_201_CREATED
+        )
+    except User.DoesNotExist:
+        serializer = UserRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        email = serializer.data['email']
+        username = serializer.data['username']
+        user = User.objects.get(
+            email=email,
+            username=username
+        )
+        send_email(request.data['email'], user)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -30,7 +49,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     def post(self, request):
         user = get_object_or_404(User, username=request.data['username'])
         serializer = MyTokenObtainPairSerializer(data=request.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         refresh = RefreshToken.for_user(user)
         return Response(
             {

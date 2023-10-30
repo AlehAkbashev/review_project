@@ -1,9 +1,6 @@
-import csv
 from rest_framework import (
     viewsets,
-    generics,
-    views,
-    mixins,
+    pagination,
     status,
     permissions,
 )
@@ -31,6 +28,7 @@ from reviews.models import (
     Comment,
     Review,
 )
+from users.service import send_email
 
 User = get_user_model()
 
@@ -38,13 +36,13 @@ User = get_user_model()
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = permissions.AllowAny
+    permission_classes = (permissions.AllowAny, )
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    permission_classes = permissions.AllowAny
+    permission_classes = (permissions.AllowAny, )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -56,15 +54,32 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, AdminAccess)
+    pagination_class = pagination.PageNumberPagination
+
+    lookup_field = "username"
+
+    def perform_create(self, serializer):
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        serializer.save()
+        user = User.objects.get(email=email)
+        send_email(email, user)
 
 
 @api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def get_patch_me_user(request):
     if request.method == 'PATCH':
-        user = get_object_or_404(User, username=request.user.username)
-        serializer = MeSerializer(user, data=request.data)
-        serializer.is_valid()
+        user = get_object_or_404(
+            User,
+            username=request.user.username
+        )
+        serializer = MeSerializer(
+            user,
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
