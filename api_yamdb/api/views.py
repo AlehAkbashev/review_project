@@ -1,9 +1,6 @@
-import csv
 from rest_framework import (
     viewsets,
-    generics,
-    views,
-    mixins,
+    pagination,
     status,
     permissions,
 )
@@ -31,6 +28,7 @@ from reviews.models import (
     Comment,
     Review,
 )
+from users.service import send_email
 
 User = get_user_model()
 
@@ -56,6 +54,16 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, AdminAccess)
+    pagination_class = pagination.PageNumberPagination
+
+    lookup_field = "username"
+
+    def perform_create(self, serializer):
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        serializer.save()
+        user = User.objects.get(email=email)
+        send_email(email, user)
 
 
 @api_view(['GET', 'PATCH'])

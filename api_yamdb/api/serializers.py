@@ -30,7 +30,7 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
-    
+
     def validate_year(self, value):
         year = dt.date.today().year
         if year > year + 1:
@@ -60,13 +60,18 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class UsersSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
         model = User
 
 
 class MeSerializer(serializers.ModelSerializer):
-    # role = serializers.CharField(read_only=True, default = serializers)
-
     class Meta:
         fields = (
             'username',
