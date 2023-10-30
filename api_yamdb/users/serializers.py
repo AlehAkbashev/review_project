@@ -11,6 +11,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = ('email', 'username')
         model = User
 
+
 class MyTokenObtainPairSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
@@ -26,7 +27,6 @@ class MyTokenObtainPairSerializer(serializers.ModelSerializer):
             user,
             data['confirmation_code']
         ):
-            if default_token_generator.check_token(user, data['confirmation_code']):
-                raise serializers.ValidationError('Confirmation code does not match')
-            return data
+            raise serializers.ValidationError('Confirmation code does not match')
+        return data
 
