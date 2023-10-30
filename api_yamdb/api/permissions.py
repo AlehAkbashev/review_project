@@ -12,6 +12,7 @@ class ReaderOrAdmin(permissions.BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
+        print(request.user.role)
         return request.user.role == 'admin'
 
 

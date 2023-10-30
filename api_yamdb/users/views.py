@@ -23,7 +23,7 @@ def user_registration(request):
         send_email(request.data['email'], user)
         return Response(
             request.data,
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_200_OK
         )
     except User.DoesNotExist:
         serializer = UserRegistrationSerializer(data=request.data)
@@ -38,7 +38,7 @@ def user_registration(request):
         send_email(request.data['email'], user)
         return Response(
             serializer.data,
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_200_OK
         )
 
 
