@@ -49,7 +49,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     def post(self, request):
         user = get_object_or_404(User, username=request.data['username'])
         serializer = MyTokenObtainPairSerializer(data=request.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         refresh = RefreshToken.for_user(user)
         return Response(
             {
