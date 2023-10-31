@@ -36,13 +36,13 @@ User = get_user_model()
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = [ReaderOrAdmin, AllowAny]
+    permission_classes = [AllowAny, ReaderOrAdmin]
     pagination_class = PageNumberPagination
 
-    def destroy(self, request, *args, **kwargs):
-        genre = get_object_or_404(Genres, slug=self.kwargs.get('slug'))
-        genre.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # def destroy(self, request, *args, **kwargs):
+    #     genre = get_object_or_404(Genres, slug=self.kwargs.get('slug'))
+    #     genre.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -59,7 +59,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (ReaderOrAdmin,)
+    permission_classes = (AllowAny, ReaderOrAdmin,)
 
 
 class UserViewSet(viewsets.ModelViewSet):

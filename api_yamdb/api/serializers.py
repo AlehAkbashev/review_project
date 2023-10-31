@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from reviews.models import (
     Categories,
     Genres,
-    GenreTitle,
+    TitleGenre,
     Title,
     Comment,
     Review,
@@ -39,9 +39,10 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class GenreTitleSerializer(serializers.ModelSerializer):
+    # title_id = serializers.SlugRelatedField(many=False, read_only=True, slug_field='title_name')
     class Meta:
         fields = '__all__'
-        model = GenreTitle
+        model = TitleGenre
 
 
 class CommentSerializer(serializers.ModelSerializer):

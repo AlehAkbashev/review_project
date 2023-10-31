@@ -1,4 +1,7 @@
 from rest_framework import permissions
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class ReaderOrAdmin(permissions.BasePermission):
@@ -7,12 +10,12 @@ class ReaderOrAdmin(permissions.BasePermission):
             return True
         else:
             if (request.user.is_authenticated
-                    and request.user.role == 'admin'):
+                    and request.user.role == 'admin') or request.user.is_superuser:
                 return True
             return False
 
     def has_object_permission(self, request, view, obj):
-        return request.user.role == 'admin'
+        return request.user.role == 'admin' or request.user.is_superuser
 
 
 class AdminAccess(permissions.BasePermission):
