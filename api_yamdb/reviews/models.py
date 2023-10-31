@@ -49,7 +49,7 @@ class Title(models.Model):
         return self.name
 
 
-class GenreTitle(models.Model):
+class TitleGenre(models.Model):
     title_id = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
