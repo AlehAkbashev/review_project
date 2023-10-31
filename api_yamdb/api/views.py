@@ -2,8 +2,9 @@ from rest_framework import (
     viewsets,
     pagination,
     status,
+    filters
 )
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -36,20 +37,31 @@ User = get_user_model()
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = [AllowAny, ReaderOrAdmin]
     pagination_class = PageNumberPagination
 
     # def destroy(self, request, *args, **kwargs):
     #     genre = get_object_or_404(Genres, slug=self.kwargs.get('slug'))
     #     genre.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
+    permission_classes = (ReaderOrAdmin, )
+    pagination_class = PageNumberPagination
+    http_method_names = ['get', 'post', 'delete']
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+    lookup_field = 'slug'
+
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
+    pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
 
-    permission_classes = (ReaderOrAdmin, AllowAny)
+    permission_classes = (ReaderOrAdmin, )
+
+    http_method_names = ['get', 'post', 'delete']
 
     # def create(self, request, *args, **kwargs):
     #     slug = self.kwargs.get('slug')
@@ -67,6 +79,9 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, AdminAccess)
     pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('username', )
+    http_method_names = ['post', 'patch', 'delete', 'get']
 
     lookup_field = "username"
 
@@ -77,27 +92,27 @@ class UserViewSet(viewsets.ModelViewSet):
         user = User.objects.get(email=email)
         send_email(email, user)
 
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        url_path='me',
+        permission_classes=[IsAuthenticated,],
+        serializer_class=MeSerializer
+    )
+    def get_patch_me_user(self, request):
+        if request.method == 'PATCH':
+            serializer = MeSerializer(
+                request.user,
+                data=request.data,
+                context={'request': request},
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['GET', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def get_patch_me_user(request):
-    if request.method == 'PATCH':
-        user = get_object_or_404(
-            User,
-            username=request.user.username
-        )
-        serializer = MeSerializer(
-            user,
-            data=request.data,
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer = MeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    user = get_object_or_404(User, username=request.user.username)
-    serializer = MeSerializer(user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

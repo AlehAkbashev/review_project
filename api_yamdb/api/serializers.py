@@ -16,13 +16,13 @@ User = get_user_model()
 
 class GenresSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Genres
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = ('name', 'slug')
         model = Categories
 
 
@@ -73,6 +73,7 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
+
     class Meta:
         fields = (
             'username',
@@ -89,7 +90,5 @@ class MeSerializer(serializers.ModelSerializer):
             self.context.get('request').user.role != 'admin'
             and not self.context.get('request').user.is_superuser
         ):
-            raise serializers.ValidationError(
-                "You don't have permission to change ROLE"
-            )
+            return self.context.get('request').user.role
         return value

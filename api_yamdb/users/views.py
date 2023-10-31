@@ -17,10 +17,10 @@ User = get_user_model()
 def user_registration(request):
     try:
         user = User.objects.get(
-            email=request.data['email'],
-            username=request.data['username']
+            email=request.data.get('email'),
+            username=request.data.get('username')
         )
-        send_email(request.data['email'], user)
+        send_email(request.data.get('email'), user)
         return Response(
             request.data,
             status=status.HTTP_200_OK
@@ -29,17 +29,18 @@ def user_registration(request):
         serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        email = serializer.data['email']
-        username = serializer.data['username']
+        email = serializer.data.get('email')
+        username = serializer.data.get('username')
         user = User.objects.get(
             email=email,
             username=username
         )
-        send_email(request.data['email'], user)
+        send_email(request.data.get('email'), user)
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
         )
+
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -47,7 +48,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        user = get_object_or_404(User, username=request.data['username'])
+        user = get_object_or_404(User, username=request.data.get('username'))
         serializer = MyTokenObtainPairSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         refresh = RefreshToken.for_user(user)
