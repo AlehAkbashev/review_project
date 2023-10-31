@@ -6,13 +6,13 @@ from reviews.models import (
     Title,
     Comment,
     Review,
-    GenreTitle,
+    TitleGenre,
     User,
 )
 
 
 def import_data():
-    with open('static/data/users.csv') as csvfile:
+    with open('static/data/users.csv', encoding="utf8") as csvfile:
         reader = csv.reader(csvfile)
         reader = list(reader)
         reader.pop(0)
@@ -27,7 +27,7 @@ def import_data():
                 last_name=row[6]
             )
 
-    with open('static/data/category.csv') as csvfile:
+    with open('static/data/category.csv', encoding="utf8") as csvfile:
         reader = csv.reader(csvfile)
         reader = list(reader)
         reader.pop(0)
@@ -38,7 +38,7 @@ def import_data():
                 slug=row[2]
             )
 
-    with open('static/data/genre.csv') as csvfile:
+    with open('static/data/genre.csv', encoding="utf8") as csvfile:
         reader = csv.reader(csvfile)
         reader = list(reader)
         reader.pop(0)
@@ -49,58 +49,56 @@ def import_data():
                 slug=row[2]
             )
 
-    # <-----------------------Impotrs Doesnt Work From Here--------------------->
+    with open('static/data/titles.csv', encoding="utf8") as csvfile:
+        reader = csv.reader(csvfile)
+        reader = list(reader)
+        reader.pop(0)
+        for row in reader:
+            Title.objects.get_or_create(
+                id=row[0],
+                name=row[1],
+                year=row[2],
+                category=Categories.objects.get(id=row[3])
+            )
 
-    # with open('static/data/review.csv') as csvfile:
-    #     reader = csv.reader(csvfile)
-    #     reader = list(reader)
-    #     reader.pop(0)
-    #     for row in reader:
-    #         Review.objects.get_or_create(
-    #             id=row[0],
-    #             title_id=row[1],
-    #             text=row[2],
-    #             author=row[3],
-    #             score=row[4],
-    #             pub_date=row[5]
-    #         )
+    with open('static/data/review.csv', encoding="utf8") as csvfile:
+        reader = csv.reader(csvfile)
+        reader = list(reader)
+        reader.pop(0)
+        for row in reader:
+            Review.objects.get_or_create(
+                id=row[0],
+                title_id=row[1],
+                text=row[2],
+                author=User.objects.get(id=row[3]),
+                score=row[4],
+                pub_date=row[5]
+            )
 
-    # with open('static/data/genre_title.csv') as csvfile:
-    #     reader = csv.reader(csvfile)
-    #     reader = list(reader)
-    #     reader.pop(0)
-    #     for row in reader:
-    #         GenreTitle.objects.get_or_create(
-    #             id=row[0],
-    #             title_id=row[1],
-    #             genre_id=row[2]
-    #         )
+    with open('static/data/genre_title.csv', encoding="utf8") as csvfile:
+        reader = csv.reader(csvfile)
+        reader = list(reader)
+        reader.pop(0)
+        for row in reader:
+            TitleGenre.objects.get_or_create(
+                id=row[0],
+                title_id=Title.objects.get(id=row[1]),
+                genre_id=Genres.objects.get(id=row[2])
+            )
 
-    # with open('static/data/titles.csv') as csvfile:
-    #     reader = csv.reader(csvfile)
-    #     reader = list(reader)
-    #     reader.pop(0)
-    #     for row in reader:
-    #         Title.objects.get_or_create(
-    #             id=row[0],
-    #             name=row[1],
-    #             year=row[2],
-    #             category=row[3]
-    #         )
-    #
-    # with open('static/data/comments.csv') as csvfile:
-    #     reader = csv.reader(csvfile)
-    #     reader = list(reader)
-    #     reader.pop(0)
-    #     for row in reader:
-    #         Comment.objects.get_or_create(
-    #             id=row[0],
-    #             review_id=row[1],
-    #             text=row[2],
-    #             author=row[3],
-    #             pub_date=row[4]
-    #
-    #         )
+    with open('static/data/comments.csv', encoding="utf8") as csvfile:
+        reader = csv.reader(csvfile)
+        reader = list(reader)
+        reader.pop(0)
+        for row in reader:
+            Comment.objects.get_or_create(
+                id=row[0],
+                review_id=row[1],
+                text=row[2],
+                author=User.objects.get(id=row[3]),
+                pub_date=row[4]
+    
+            )
 
 
 class Command(BaseCommand):
