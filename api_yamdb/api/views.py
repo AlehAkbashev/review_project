@@ -41,7 +41,6 @@ class GenresViewSet(viewsets.ModelViewSet):
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
     permission_classes = (ReaderOrAdmin, )
-    pagination_class = PageNumberPagination
     http_method_names = ['get', 'post', 'delete']
     filter_backends = (filters.SearchFilter, )
     search_fields = ('name', )
