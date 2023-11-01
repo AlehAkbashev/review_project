@@ -14,4 +14,3 @@ def send_email(mail, user):
         recipient_list=[mail],
         fail_silently=True,
     )
-    return conf_code
