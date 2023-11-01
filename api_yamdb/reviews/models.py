@@ -48,7 +48,7 @@ class Title(models.Model):
         Genres,
         verbose_name='title_genres',
         related_name='genres',
-        through='GenreTitle'
+        through='TitleGenre'
     )
 
     def __str__(self):
