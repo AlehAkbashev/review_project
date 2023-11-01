@@ -11,6 +11,7 @@ class Categories(models.Model):
         validators=[RegexValidator(regex=r'^[-a-zA-Z0-9_]+$', message="Slug doesn't correct")],
         max_length=50,
         verbose_name='category_slug',
+        blank=False,
         unique=True
     )
 
@@ -34,7 +35,10 @@ class Genres(models.Model):
 class Title(models.Model):
     name = models.CharField(max_length=256, verbose_name='title_name')
     year = models.IntegerField(verbose_name='title_year')
-    description = models.TextField(blank=True, verbose_name='title_description')
+    description = models.TextField(
+        blank=True,
+        verbose_name='title_description'
+    )
     category = models.ForeignKey(
         Categories,
         on_delete=models.CASCADE,
@@ -43,7 +47,9 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genres,
         verbose_name='title_genres',
-        related_name='genres')
+        related_name='genres',
+        through='TitleGenre'
+    )
 
     def __str__(self):
         return self.name
@@ -54,15 +60,13 @@ class TitleGenre(models.Model):
         Title,
         on_delete=models.CASCADE,
         verbose_name='genreTitle_titles',
-        related_name='Titlestitles',
-        blank=False
+        related_name='Titlestitles'
     )
     genre_id = models.ForeignKey(
         Genres,
         on_delete=models.CASCADE,
         verbose_name='genreTitle_genres',
-        related_name='Genresgenres',
-        blank=False
+        related_name='Genresgenres'
     )
 
     def __str__(self):
