@@ -2,11 +2,13 @@ from rest_framework import (
     viewsets,
     pagination,
     status,
-    filters
+    filters,
+    mixins
 )
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from django.contrib.auth import get_user_model
@@ -29,25 +31,45 @@ from reviews.models import (
     Comment,
     Review,
 )
-from users.service import send_email
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
+from rest_framework import status
+from .serializers import UserRegistrationSerializer, MyTokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from .service import send_email
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
 
-class GenresViewSet(viewsets.ModelViewSet):
+class GenresViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin
+):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
     permission_classes = (ReaderOrAdmin, )
-    http_method_names = ['get', 'post', 'delete']
     filter_backends = (filters.SearchFilter, )
     search_fields = ('name', )
     lookup_field = 'slug'
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
+class CategoriesViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin
+):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = pagination.PageNumberPagination
@@ -55,7 +77,6 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     search_fields = ('name', )
     lookup_field = 'slug'
     permission_classes = (ReaderOrAdmin, )
-    http_method_names = ['get', 'post', 'delete']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -77,13 +98,6 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', )
     http_method_names = ['post', 'patch', 'delete', 'get']
     lookup_field = "username"
-
-    def perform_create(self, serializer):
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-        serializer.save()
-        user = User.objects.get(email=email)
-        send_email(email, user)
 
     @action(
         detail=False,
@@ -128,3 +142,53 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def user_registration(request):
+    try:
+        user = User.objects.get(
+            email=request.data.get('email'),
+            username=request.data.get('username')
+        )
+        send_email(request.data.get('email'), user)
+        return Response(
+            request.data,
+            status=status.HTTP_200_OK
+        )
+    except User.DoesNotExist:
+        serializer = UserRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        email = serializer.data.get('email')
+        username = serializer.data.get('username')
+        user = User.objects.get(
+            email=email,
+            username=username
+        )
+        send_email(request.data.get('email'), user)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        print(request.data)
+        user = get_object_or_404(User, username=request.data.get('username'))
+        if not default_token_generator.check_token(user, request.data['confirmation_code']):
+            return Response(
+                {'error': 'Your confirmation_code does not match'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                'token': str(refresh.access_token)
+            },
+        )

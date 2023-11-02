@@ -27,12 +27,29 @@ class User(AbstractUser):
         verbose_name='Role',
         choices=CHOICES
     )
-    confirmation_code = models.TextField(blank=True, null=True)
 
 
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+
+    @property
+    def is_admin(self):
+        if self.role == 'admin' or self.is_superuser:
+            return True
+        return False
+
+    @property
+    def is_moderator(self):
+        if self.role == 'moderator':
+            return True
+        return False
+
+    @property
+    def is_user(self):
+        if self.role == 'user':
+            return True
+        return False
 
     def __str__(self) -> str:
         return str(self.username)
