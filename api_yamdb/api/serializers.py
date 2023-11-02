@@ -1,6 +1,6 @@
+from typing import Any, Dict
 from rest_framework import serializers
 import datetime as dt
-from pytils.translit import slugify
 
 from django.contrib.auth import get_user_model
 from reviews.models import (
@@ -13,6 +13,12 @@ from reviews.models import (
 )
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework_simplejwt.tokens import RefreshToken, Token
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -163,3 +169,40 @@ class MeSerializer(serializers.ModelSerializer):
         ):
             return self.context.get('request').user.role
         return value
+    
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('email', 'username')
+        model = User
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    pass
+
+    # def __init__(self, *args, **kwargs) -> None:
+    #     super().__init__(*args, **kwargs)
+    #     self.fields['password'].required = False
+
+    # @classmethod
+    # def get_token(cls, user) -> Token:
+    #     return RefreshToken.for_user(user)
+    
+    # def validate(self, attrs: Dict[str, Any]) -> Dict[str, str]:
+    #     attrs.update({'password': ''})
+    #     print(self.initial_data)
+    #     data = {}
+    #     refresh = self.get_token(self.user)
+    #     data['token'] = refresh
+    #     return data
+
+    # def validate(self, data):
+    #     print(1)
+    #     print(data)
+    #     user = get_object_or_404(User, username=data['username'])
+    #     if not default_token_generator.check_token(
+    #         user,
+    #         data['confirmation_code']
+    #     ):
+    #         raise serializers.ValidationError('Confirmation code does not match')
+    #     return data

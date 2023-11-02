@@ -7,8 +7,11 @@ from .views import (
     TitleViewSet,
     CommentViewSet,
     ReviewViewSet,
-    UserViewSet
+    UserViewSet,
+    user_registration,
+    MyTokenObtainPairView
 )
+
 
 router_v1 = DefaultRouter()
 router_v1.register(r'categories', CategoriesViewSet, basename='categories')
@@ -20,6 +23,7 @@ router_v1.register(r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename=
 
 
 urlpatterns = [
-    path('v1/auth/', include('users.urls')),
+    path('v1/auth/signup/', user_registration),
+    path('v1/auth/token/', MyTokenObtainPairView.as_view()),
     path('v1/', include(router_v1.urls)),
 ]
