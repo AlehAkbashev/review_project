@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
-from .permissions import AdminAccess, ReaderOrAdmin
+from .permissions import AdminAccess, ReaderOrAdmin, CommentPermission
 from .serializers import (
     GenresSerializer,
     TitleSerializer,
@@ -81,8 +81,8 @@ class CategoriesViewSet(
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (ReaderOrAdmin,)
+    serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend, )
     pagination_class = pagination.PageNumberPagination
     filterset_class = TitleFilter
@@ -125,6 +125,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (CommentPermission,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def perform_create(self, serializer):
@@ -137,10 +138,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
+    pagination_class = PageNumberPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update(
+            {
+                'title_id': self.kwargs.get('title_id')
+            }
+        )
+        return context
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
+        title = Title.objects.get(id=title_id)
+        serializer = ReviewSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
         serializer.save(author=self.request.user, title=title)
 
 
@@ -167,6 +180,7 @@ def user_registration(request):
             email=email,
             username=username
         )
+        print(user)
         send_email(request.data.get('email'), user)
         return Response(
             serializer.data,
@@ -179,8 +193,9 @@ class MyTokenObtainPairView(TokenObtainPairView):
     permission_classes = (AllowAny, )
 
     def post(self, request):
-        print(request.data)
-        user = get_object_or_404(User, username=request.data.get('username'))
+        # print(request.data)
+        print(self.request)
+        user = User.objects.get(username=request.data.get('username'))
         if not default_token_generator.check_token(user, request.data['confirmation_code']):
             return Response(
                 {'error': 'Your confirmation_code does not match'},

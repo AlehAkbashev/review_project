@@ -112,5 +112,13 @@ class Review(models.Model):
         auto_now_add=True,
         verbose_name='review_pub_date')
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
+
     def __str__(self):
         return self.text

@@ -19,6 +19,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.validators import UniqueTogetherValidator
 
 User = get_user_model()
 
@@ -41,29 +42,30 @@ class CategoryField(serializers.ModelSerializer):
         model = Categories
 
     def to_internal_value(self, data):
-        category_obj = get_object_or_404(Categories, slug=data)
+        try:
+            category_obj = Categories.objects.get(slug=data)
+        except Categories.DoesNotExist:
+            raise serializers.ValidationError('This category does not exist')
         return category_obj
-    
-    def to_representation(self, instance):
-        print(instance)
-        return super().to_representation(instance)
 
 
 class GenreField(serializers.ModelSerializer):
-    
     class Meta:
         fields = ('name', 'slug')
         model = Genres
 
     def to_internal_value(self, data):
-        genre_obj = Genres.objects.get(slug=data)
+        try:
+            genre_obj = Genres.objects.get(slug=data)
+        except Genres.DoesNotExist:
+            raise serializers.ValidationError('This genre does not exist')
         return {'name': genre_obj.name, 'slug': genre_obj.slug}
 
 
 class TitleSerializer(serializers.ModelSerializer):
     category = CategoryField()
     genre = GenreField(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = (
@@ -73,13 +75,13 @@ class TitleSerializer(serializers.ModelSerializer):
             'rating',
             'description',
             'genre',
-            'category'
+            'category',
         )
         model = Title
 
     def validate_year(self, value):
-        year = dt.date.today().year
-        if year > year + 1:
+        current_year = dt.date.today().year
+        if value > current_year + 1:
             raise serializers.ValidationError("Check year of title")
         return value
 
@@ -90,17 +92,26 @@ class TitleSerializer(serializers.ModelSerializer):
             current_genre = Genres.objects.get(slug=genre['slug'])
             TitleGenre.objects.create(title_id=title, genre_id=current_genre)
         return title
-    
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.year = validated_data.get('year', instance.year)
+        instance.description = validated_data.get('description', instance.description)
+        instance.category = validated_data.get('category', instance.category)
+        if 'genre' in validated_data:
+            genre_list = []
+            genres = validated_data.pop('genre')
+            for genre in genres:
+                current_genre = Genres.objects.get(slug=genre['slug'])
+                genre_list.append(current_genre)
+            instance.genre.set(genre_list)
+        instance.save()
+        return instance
+
     def get_rating(self, obj):
         title = Title.objects.get(pk=obj.id)
         rating = Review.objects.filter(title=title).aggregate(Avg('score'))
         return rating['score__avg']
-
-
-class GenreTitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = TitleGenre
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -119,6 +130,7 @@ class CommentSerializer(serializers.ModelSerializer):
         )
 
 
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
@@ -132,8 +144,18 @@ class ReviewSerializer(serializers.ModelSerializer):
             'text',
             'author',
             'score',
-            'pub_date'
+            'pub_date',
         )
+    
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        print(self.context)
+        title = Title.objects.get(pk=self.context['title_id'])
+        try:
+            Review.objects.get(title=title)
+            raise serializers.ValidationError('You cannot write more than one review on the same title')
+        except Review.DoesNotExist:
+            return attrs
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -180,29 +202,3 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     pass
 
-    # def __init__(self, *args, **kwargs) -> None:
-    #     super().__init__(*args, **kwargs)
-    #     self.fields['password'].required = False
-
-    # @classmethod
-    # def get_token(cls, user) -> Token:
-    #     return RefreshToken.for_user(user)
-    
-    # def validate(self, attrs: Dict[str, Any]) -> Dict[str, str]:
-    #     attrs.update({'password': ''})
-    #     print(self.initial_data)
-    #     data = {}
-    #     refresh = self.get_token(self.user)
-    #     data['token'] = refresh
-    #     return data
-
-    # def validate(self, data):
-    #     print(1)
-    #     print(data)
-    #     user = get_object_or_404(User, username=data['username'])
-    #     if not default_token_generator.check_token(
-    #         user,
-    #         data['confirmation_code']
-    #     ):
-    #         raise serializers.ValidationError('Confirmation code does not match')
-    #     return data
