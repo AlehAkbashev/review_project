@@ -138,10 +138,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
+    pagination_class = PageNumberPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update(
+            {
+                'title_id': self.kwargs.get('title_id')
+            }
+        )
+        return context
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
+        title = Title.objects.get(id=title_id)
+        serializer = ReviewSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
         serializer.save(author=self.request.user, title=title)
 
 
