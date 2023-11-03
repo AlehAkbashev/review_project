@@ -1,10 +1,6 @@
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 
 def validate_username(value):
-    if value == 'me':
-        raise ValidationError(
-            {
-                'error': "You can't use that username"
-            }
-        )
+    if value == "me":
+        raise ValidationError("You can't use that username")
