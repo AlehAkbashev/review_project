@@ -8,6 +8,10 @@ User = get_user_model()
 
 
 class Category(models.Model):
+    """
+    Модель для категорий.
+    """
+
     name = models.CharField(max_length=256, verbose_name="category_name")
     slug = models.SlugField(
         validators=[
@@ -26,6 +30,10 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """
+    Модель для жанров.
+    """
+
     name = models.CharField(max_length=256, verbose_name="genres_name")
     slug = models.SlugField(
         max_length=50,
@@ -39,6 +47,10 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """
+    Модель для заголовков.
+    """
+
     name = models.CharField(max_length=256, verbose_name="title_name")
     year = models.IntegerField(
         verbose_name="title_year",
@@ -67,6 +79,10 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
+    """
+    Модель для связи заголовков и жанров.
+    """
+
     title_id = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -85,6 +101,10 @@ class TitleGenre(models.Model):
 
 
 class Comment(models.Model):
+    """
+    Модель для комментариев.
+    """
+
     text = models.TextField(verbose_name="comment_text")
     review = models.ForeignKey(
         "Review",
@@ -107,6 +127,10 @@ class Comment(models.Model):
 
 
 class Review(models.Model):
+    """
+    Модель для отзывов.
+    """
+
     text = models.TextField(verbose_name="review_text")
     title = models.ForeignKey(
         Title,

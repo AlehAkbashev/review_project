@@ -6,6 +6,11 @@ from .validators import validate_username
 
 
 class User(AbstractUser):
+    """
+    Пользователь.
+    Расширение модели AbstractUser с добавлением дополнительных полей.
+    """
+
     CHOICES = (
         ("user", "user"),
         ("moderator", "moderator"),
@@ -30,21 +35,37 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
+        """
+        Проверяет, является ли пользователь администратором.
+        Возвращает True, если роль пользователя равна "admin"
+        или если пользователь является суперпользователем, иначе False.
+        """
         if self.role == "admin" or self.is_superuser:
             return True
         return False
 
     @property
     def is_moderator(self):
+        """
+        Проверяет, является ли пользователь модератором.
+        Возвращает True, если роль пользователя равна "moderator", иначе False.
+        """
         if self.role == "moderator":
             return True
         return False
 
     @property
     def is_user(self):
+        """
+        Проверяет, является ли пользователь обычным пользователем.
+        Возвращает True, если роль пользователя равна "user", иначе False.
+        """
         if self.role == "user":
             return True
         return False
 
     def __str__(self) -> str:
+        """
+        Возвращает строковое представление объекта User (имя пользователя).
+        """
         return str(self.username)
