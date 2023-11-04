@@ -14,18 +14,30 @@ User = get_user_model()
 
 
 class GenresSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор жанров.
+    """
+
     class Meta:
         fields = ("name", "slug")
         model = Genre
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор категорий.
+    """
+
     class Meta:
         fields = ("name", "slug")
         model = Category
 
 
 class CategoryField(serializers.RelatedField):
+    """
+    Поле для сериализации категории.
+    """
+
     class Meta:
         fields = ("name", "slug")
         model = Category
@@ -45,6 +57,10 @@ class CategoryField(serializers.RelatedField):
 
 
 class GenreField(serializers.RelatedField):
+    """
+    Поле для сериализации жанра.
+    """
+
     class Meta:
         fields = ("name", "slug")
         model = Genre
@@ -64,6 +80,10 @@ class GenreField(serializers.RelatedField):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор тайтлов.
+    """
+
     category = CategoryField()
     genre = GenreField(many=True)
     rating = serializers.SerializerMethodField(read_only=True)
@@ -81,12 +101,18 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     def validate_year(self, value):
+        """
+        Проверяет год выпуска тайтла.
+        """
         current_year = dt.date.today().year
         if value > current_year + 1:
             raise serializers.ValidationError("Check year of title")
         return value
 
     def create(self, validated_data):
+        """
+        Создает новый тайтл.
+        """
         genres = validated_data.pop("genre")
         title = Title.objects.create(**validated_data)
         for genre in genres:
@@ -95,6 +121,9 @@ class TitleSerializer(serializers.ModelSerializer):
         return title
 
     def update(self, instance, validated_data):
+        """
+        Обновляет информацию о тайтле.
+        """
         instance.name = validated_data.get("name", instance.name)
         instance.year = validated_data.get("year", instance.year)
         instance.description = validated_data.get(
@@ -112,12 +141,19 @@ class TitleSerializer(serializers.ModelSerializer):
         return instance
 
     def get_rating(self, obj):
+        """
+        Возвращает средний рейтинг тайтла.
+        """
         title = Title.objects.get(pk=obj.id)
         rating = Review.objects.filter(title=title).aggregate(Avg("score"))
         return rating["score__avg"]
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор комментария.
+    """
+
     author = serializers.SlugRelatedField(
         slug_field="username", read_only=True
     )
@@ -128,6 +164,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Review.
+    """
+
     author = serializers.SlugRelatedField(
         slug_field="username", read_only=True
     )
@@ -143,6 +183,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
+        """
+        Проверяет данные сериализатора.
+        """
         data = super().validate(data)
         try:
             title = get_object_or_404(Title, pk=self.context["title_id"])
@@ -158,6 +201,9 @@ class ReviewSerializer(serializers.ModelSerializer):
             return data
 
     def update(self, instance, validated_data):
+        """
+        Обновляет экземпляр модели Review.
+        """
         instance.text = self.validated_data.get("text", instance.text)
         instance.score = self.validated_data.get("score", instance.score)
         instance.save()
@@ -165,6 +211,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class UsersSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели User.
+    """
+
     class Meta:
         fields = (
             "username",
@@ -178,6 +228,10 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели User.
+    """
+
     class Meta:
         fields = (
             "username",
@@ -190,26 +244,40 @@ class MeSerializer(serializers.ModelSerializer):
         model = User
 
     def validate_role(self, value):
+        """
+        Проверяет роль пользователя.
+        """
         if (
-            self.context.get("request").user.role != "admin"
-            and not self.context.get("request").user.is_superuser
+                self.context.get("request").user.role != "admin"
+                and not self.context.get("request").user.is_superuser
         ):
             return self.context.get("request").user.role
         return value
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для регистрации пользователя.
+    """
+
     class Meta:
         fields = ("email", "username")
         model = User
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Сериализатор для получения токена доступа.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["password"].required = False
 
     def validate(self, data) -> Dict[str, str]:
+        """
+        Проверяет данные сериализатора.
+        """
         username = data.get("username")
         confirmation_code = data.get("confirmation_code")
         user = get_object_or_404(User, username=username)

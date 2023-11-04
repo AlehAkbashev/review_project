@@ -28,6 +28,10 @@ class GenresViewSet(
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
 ):
+    """
+    ViewSet для работы с жанрами.
+    """
+
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     permission_classes = (ReaderOrAdmin,)
@@ -42,6 +46,10 @@ class CategoriesViewSet(
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
 ):
+    """
+    ViewSet для работы с категориями.
+    """
+
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
@@ -51,6 +59,10 @@ class CategoriesViewSet(
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с произведениями.
+    """
+
     queryset = Title.objects.all()
     permission_classes = (ReaderOrAdmin,)
     serializer_class = TitleSerializer
@@ -60,6 +72,10 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с пользователями.
+    """
+
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, AdminAccess)
@@ -78,6 +94,9 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer_class=MeSerializer,
     )
     def get_patch_me_user(self, request):
+        """
+        Получение и обновление информации о текущем пользователе.
+        """
         if request.method == "PATCH":
             serializer = MeSerializer(
                 request.user,
@@ -94,39 +113,62 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с комментариями.
+    """
+
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (CommentReviewPermission,)
     http_method_names = ["get", "post", "patch", "delete"]
 
     def perform_create(self, serializer):
+        """
+        Выполняет создание комментария.
+        """
         review_id = self.kwargs.get("review_id")
         review = get_object_or_404(Review, id=review_id)
         serializer.save(review=review, author=self.request.user)
 
     def perform_update(self, serializer):
+        """
+        Выполняет обновление комментария.
+        """
         review_id = self.kwargs.get("review_id")
         review = get_object_or_404(Review, id=review_id)
         serializer.save(review=review, author=self.request.user)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с отзывами.
+    """
+
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ["get", "post", "patch", "delete"]
     permission_classes = (CommentReviewPermission,)
 
     def get_serializer_context(self):
+        """
+        Возвращает контекст сериализатора.
+        """
         context = super().get_serializer_context()
         context.update({"title_id": self.kwargs.get("title_id")})
         return context
 
     def perform_create(self, serializer):
+        """
+        Выполняет создание отзыва.
+        """
         title_id = self.kwargs.get("title_id")
         title = Title.objects.get(id=title_id)
         serializer.save(author=self.request.user, title=title)
 
     def perform_update(self, serializer):
+        """
+        Выполняет обновление отзыва.
+        """
         title_id = self.kwargs.get("title_id")
         title = Title.objects.get(id=title_id)
         serializer.save(author=self.request.user, title=title)
@@ -135,6 +177,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def user_registration(request):
+    """
+    Регистрация пользователя.
+
+    Parameters:
+    - request: Запрос с данными пользователя.
+
+    Returns:
+    - Response: Ответ с данными пользователя или ошибкой.
+
+    Raises:
+    - User.DoesNotExist: Если пользователь не существует.
+    - UserRegistrationSerializer.ValidationError:
+    Если данные пользователя некорректны.
+    """
     try:
         user = User.objects.get(
             email=request.data.get("email"),
@@ -154,10 +210,37 @@ def user_registration(request):
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Получение токена доступа для пользователя.
+
+    Attributes:
+    - serializer_class: Класс сериализатора для получения токена.
+    - permission_classes: Классы разрешений для доступа к представлению.
+
+    Methods:
+    - post: Обработка POST-запроса для получения токена доступа.
+
+    Raises:
+    - MyTokenObtainPairSerializer.ValidationError:
+    Если данные пользователя некорректны.
+    """
     serializer_class = MyTokenObtainPairSerializer
     permission_classes = (AllowAny,)
 
     def post(self, request):
+        """
+        Обработка POST-запроса для получения токена доступа.
+
+        Parameters:
+        - request: Запрос с данными пользователя.
+
+        Returns:
+        - Response: Ответ с токеном доступа или ошибкой.
+
+        Raises:
+        - MyTokenObtainPairSerializer.ValidationError:
+        Если данные пользователя некорректны.
+        """
         serializer = MyTokenObtainPairSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data.get("username")
