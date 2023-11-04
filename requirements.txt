@@ -30,3 +30,4 @@ requests==2.26.0
 sqlparse==0.4.4
 toml==0.10.2
 urllib3==1.26.18
+rest-framework-simplejwt==0.0.2
