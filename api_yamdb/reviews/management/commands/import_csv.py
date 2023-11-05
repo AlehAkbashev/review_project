@@ -2,17 +2,16 @@ import csv
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 
 User = get_user_model()
 
-
 dictionary = {
     "static/data/users.csv": User,
-    "static/data/category.csv" : Category,
+    "static/data/category.csv": Category,
     "static/data/genre.csv": Genre,
 }
+
 
 def cut_list_line(csvfile):
     reader = csv.reader(csvfile)
@@ -27,10 +26,9 @@ def import_data():
             reader = csv.DictReader(csvfile)
             objs = [
                 value(**row)
-            for row in reader
+                for row in reader
             ]
             value.objects.bulk_create(objs)
-
 
     with open("static/data/titles.csv", encoding="utf8") as csvfile:
         reader = cut_list_line(csvfile)
