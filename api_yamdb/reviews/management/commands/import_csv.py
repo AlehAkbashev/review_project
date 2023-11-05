@@ -7,55 +7,33 @@ from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 
 User = get_user_model()
 
-def cut_reader_line(csvfile):
+
+dictionary = {
+    "static/data/users.csv": User,
+    "static/data/category.csv" : Category,
+    "static/data/genre.csv": Genre,
+}
+
+def cut_list_line(csvfile):
     reader = csv.reader(csvfile)
     reader = list(reader)
     reader.pop(0)
     return reader
 
+
 def import_data():
-    with open("static/data/users.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
-        objs = [
-            User(
-                id=row[0],
-                username=row[1],
-                email=row[2],
-                role=row[3],
-                bio=row[4],
-                first_name=row[5],
-                last_name=row[6],
-            )
-        for row in reader
-        ]
-        User.objects.bulk_create(objs)
-
-    with open("static/data/category.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
-        objs = [
-            Category(
-                id=row[0],
-                name=row[1],
-                slug=row[2]
-            )
-        for row in reader
-        ]
-        Category.objects.bulk_create(objs)
-
-    with open("static/data/genre.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
-        objs = [
-            Genre(
-                id=row[0],
-                name=row[1],
-                slug=row[2]
-            )
+    for key, value in dictionary.items():
+        with open(key, encoding="utf8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            objs = [
+                value(**row)
             for row in reader
-        ]
-        Genre.objects.bulk_create(objs)
+            ]
+            value.objects.bulk_create(objs)
+
 
     with open("static/data/titles.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
+        reader = cut_list_line(csvfile)
         objs = [
             Title(
                 id=row[0],
@@ -68,7 +46,7 @@ def import_data():
         Title.objects.bulk_create(objs)
 
     with open("static/data/review.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
+        reader = cut_list_line(csvfile)
         objs = [
             Review(
                 id=row[0],
@@ -83,7 +61,7 @@ def import_data():
         Review.objects.bulk_create(objs)
 
     with open("static/data/genre_title.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
+        reader = cut_list_line(csvfile)
         objs = [
             TitleGenre(
                 id=row[0],
@@ -95,7 +73,7 @@ def import_data():
         TitleGenre.objects.bulk_create(objs)
 
     with open("static/data/comments.csv", encoding="utf8") as csvfile:
-        reader = cut_reader_line(csvfile)
+        reader = cut_list_line(csvfile)
         objs = [
             Comment(
                 id=row[0],
