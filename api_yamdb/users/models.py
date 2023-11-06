@@ -18,10 +18,10 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(unique=True, max_length=254)
-    username = models.CharField(
+    username = models.SlugField(
         unique=True,
         max_length=150,
-        validators=[validate_username, RegexValidator(regex=r"^[\w.@+-]+\Z")],
+        validators=[validate_username],
     )
     password = models.CharField(blank=True, null=True, max_length=255)
     bio = models.TextField(blank=True, verbose_name="Biography")

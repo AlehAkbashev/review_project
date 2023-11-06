@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
+import re
 
 User = get_user_model()
 
@@ -220,15 +221,24 @@ class UserRegistrationSerializer(serializers.Serializer):
     """
     Сериализатор для регистрации пользователя.
     """
-    username = serializers.SlugField(max_length=150)
-    email = serializers.EmailField(max_length=254)
+    username = serializers.SlugField(max_length=150, required=True)
+    email = serializers.EmailField(max_length=254, required=True)
 
-    def validate(self, data):
+    def validate_username(self, data):
+        patterns = r"^[\w.@+-]+\Z"
         if data["username"] == "me":
             raise serializers.ValidationError(
                 "You cannot use Me for username"
             )
+        match = re.match(patterns, data['username'])
+        if not match:
+            raise serializers.ValidationError(
+                "Invalid username"
+            )
         return data
+    
+    def validate(self, attrs):
+        return super().validate(attrs)
 
 
 class MyTokenObtainPairSerializer(serializers.Serializer):

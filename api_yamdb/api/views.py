@@ -45,41 +45,6 @@ class CategoryViewSet(CategoryGenreMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
 
-# class GenresViewSet(
-#     viewsets.GenericViewSet,
-#     mixins.CreateModelMixin,
-#     mixins.DestroyModelMixin,
-#     mixins.ListModelMixin,
-# ):
-#     """
-#     ViewSet для работы с жанрами.
-#     """
-
-#     queryset = Genre.objects.all()
-#     serializer_class = GenresSerializer
-#     permission_classes = (ReaderOrAdmin,)
-#     filter_backends = (filters.SearchFilter,)
-#     search_fields = ("name",)
-#     lookup_field = "slug"
-
-
-# class CategoriesViewSet(
-#     viewsets.GenericViewSet,
-#     mixins.CreateModelMixin,
-#     mixins.DestroyModelMixin,
-#     mixins.ListModelMixin,
-# ):
-#     """
-#     ViewSet для работы с категориями.
-#     """
-
-#     queryset = Category.objects.all()
-#     serializer_class = CategoriesSerializer
-#     filter_backends = (filters.SearchFilter,)
-#     search_fields = ("name",)
-#     lookup_field = "slug"
-#     permission_classes = (ReaderOrAdmin,)
-
 
 class TitleViewSet(viewsets.ModelViewSet):
     """
@@ -142,7 +107,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     ViewSet для работы с комментариями.
     """
 
-    queryset = Comment.objects.all()
+    # queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (CommentReviewPermission, IsAuthenticatedOrReadOnly)
     http_method_names = ["get", "post", "patch", "delete"]
@@ -162,6 +127,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get("review_id")
         review = get_object_or_404(Review, id=review_id)
         serializer.save(review=review, author=self.request.user)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, id=review_id)
+        return review.comments.objects.all()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -220,17 +190,23 @@ def user_registration(request):
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data.get("email")
     username = serializer.validated_data.get("username")
+    user_one = User.objects.filter(username=username)
+    user_two = User.objects.filter(email=email)
+    check_user_email = user_one == user_two
     only_email = (
-        User.objects.filter(email=email).exists()
-        and not User.objects.filter(username=username).exists()
+        User.objects.filter(email=email)
+        and not User.objects.filter(username=username)
     )
     only_username = (
-        not User.objects.filter(email=email).exists()
-        and User.objects.filter(username=username).exists()
+        User.objects.filter(username=username)
+        and not User.objects.filter(email=email)
     )
-    if only_email or only_username:
+    if not check_user_email:
         return Response(
-            {"error": "This username or email is already exists"},
+            {
+                "username": "This username may be already used",
+                "email": "This email may be already used"
+            }
             status=status.HTTP_400_BAD_REQUEST
         )
     user, created = User.objects.get_or_create(
