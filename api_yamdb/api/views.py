@@ -6,9 +6,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
+from reviews.models import Category, Comment, Genre, Review, Title
 
 from .filters import TitleFilter
 from .permissions import AdminAccess, CommentReviewPermission, ReaderOrAdmin
@@ -25,40 +24,61 @@ from django.contrib.auth.tokens import default_token_generator
 User = get_user_model()
 
 
-class GenresViewSet(
+class CategoryGenreMixin(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
+    mixins.ListModelMixin
 ):
-    """
-    ViewSet для работы с жанрами.
-    """
-
-    queryset = Genre.objects.all()
-    serializer_class = GenresSerializer
     permission_classes = (ReaderOrAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
     lookup_field = "slug"
 
 
-class CategoriesViewSet(
-    viewsets.GenericViewSet,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-):
-    """
-    ViewSet для работы с категориями.
-    """
+class GenreViewSet(CategoryGenreMixin):
+    serializer_class = GenresSerializer
+    queryset = Genre.objects.all()
 
+
+class CategoryViewSet(CategoryGenreMixin):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("name",)
-    lookup_field = "slug"
-    permission_classes = (ReaderOrAdmin,)
+
+# class GenresViewSet(
+#     viewsets.GenericViewSet,
+#     mixins.CreateModelMixin,
+#     mixins.DestroyModelMixin,
+#     mixins.ListModelMixin,
+# ):
+#     """
+#     ViewSet для работы с жанрами.
+#     """
+
+#     queryset = Genre.objects.all()
+#     serializer_class = GenresSerializer
+#     permission_classes = (ReaderOrAdmin,)
+#     filter_backends = (filters.SearchFilter,)
+#     search_fields = ("name",)
+#     lookup_field = "slug"
+
+
+# class CategoriesViewSet(
+#     viewsets.GenericViewSet,
+#     mixins.CreateModelMixin,
+#     mixins.DestroyModelMixin,
+#     mixins.ListModelMixin,
+# ):
+#     """
+#     ViewSet для работы с категориями.
+#     """
+
+#     queryset = Category.objects.all()
+#     serializer_class = CategoriesSerializer
+#     filter_backends = (filters.SearchFilter,)
+#     search_fields = ("name",)
+#     lookup_field = "slug"
+#     permission_classes = (ReaderOrAdmin,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
