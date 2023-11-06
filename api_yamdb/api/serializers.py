@@ -3,12 +3,12 @@ from typing import Dict
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
+from django.core.validators import RegexValidator
 
 User = get_user_model()
 
@@ -86,7 +86,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     category = CategoryField()
     genre = GenreField(many=True)
-    rating = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = (
@@ -100,19 +100,11 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         model = Title
 
-    def validate_year(self, value):
-        """
-        Проверяет год выпуска тайтла.
-        """
-        current_year = dt.date.today().year
-        if value > current_year + 1:
-            raise serializers.ValidationError("Check year of title")
-        return value
-
     def create(self, validated_data):
         """
         Создает новый тайтл.
         """
+
         genres = validated_data.pop("genre")
         title = Title.objects.create(**validated_data)
         for genre in genres:
@@ -139,14 +131,6 @@ class TitleSerializer(serializers.ModelSerializer):
             instance.genre.set(genre_list)
         instance.save()
         return instance
-
-    def get_rating(self, obj):
-        """
-        Возвращает средний рейтинг тайтла.
-        """
-        title = Title.objects.get(pk=obj.id)
-        rating = Review.objects.filter(title=title).aggregate(Avg("score"))
-        return rating["score__avg"]
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -187,17 +171,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         Проверяет данные сериализатора.
         """
         data = super().validate(data)
-        try:
+        if self.context["request"].method == "POST":
             title = get_object_or_404(Title, pk=self.context["title_id"])
-            Review.objects.get(
-                title=title, author=self.context["request"].user
-            )
-            if self.context["request"].method == "PATCH":
-                return data
-            raise serializers.ValidationError(
-                "You cannot write more than one review on the same title"
-            )
-        except Review.DoesNotExist:
+            if Review.objects.filter(
+                title=title,
+                author=self.context["request"].user
+            ).exists():
+                raise serializers.ValidationError(
+                    "You cannot write more than one review on the same title"
+                )
+            return data
+        if self.context["request"].method == "PATCH":
             return data
 
     def update(self, instance, validated_data):
@@ -226,63 +210,59 @@ class UsersSerializer(serializers.ModelSerializer):
         )
         model = User
 
-
-class MeSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели User.
-    """
-
-    class Meta:
-        fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "bio",
-            "role",
-        )
-        model = User
-
     def validate_role(self, value):
         """
         Проверяет роль пользователя.
         """
         if (
-                self.context.get("request").user.role != "admin"
-                and not self.context.get("request").user.is_superuser
+            self.context.get("request").method == "PATCH"
+            and not self.context.get("request").user.is_admin
         ):
             return self.context.get("request").user.role
         return value
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(serializers.Serializer):
     """
     Сериализатор для регистрации пользователя.
     """
+    username = serializers.SlugField(max_length=150)
+    email = serializers.EmailField(max_length=254)
 
-    class Meta:
-        fields = ("email", "username")
-        model = User
-
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """
-    Сериализатор для получения токена доступа.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["password"].required = False
-
-    def validate(self, data) -> Dict[str, str]:
-        """
-        Проверяет данные сериализатора.
-        """
-        username = data.get("username")
-        confirmation_code = data.get("confirmation_code")
-        user = get_object_or_404(User, username=username)
-        if not default_token_generator.check_token(user, confirmation_code):
+    def validate(self, data):
+        if data["username"] == "me":
             raise serializers.ValidationError(
-                {"error": "Your confirmation_code does not match"}
+                "You cannot use Me for username"
             )
         return data
+
+
+class MyTokenObtainPairSerializer(serializers.Serializer):
+    username = serializers.SlugField(max_length=150, required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+
+# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+#     """
+#     Сериализатор для получения токена доступа.
+#     """
+
+#     confirmation_code = serializers.CharField(required=True)
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.fields["password"].required = False
+
+#     def validate(self, data) -> Dict[str, str]:
+#         """
+#         Проверяет данные сериализатора.
+#         """
+
+#         username = data.get("username")
+#         confirmation_code = data.get("confirmation_code")
+#         user = get_object_or_404(User, username=username)
+#         if not default_token_generator.check_token(user, confirmation_code):
+#             raise serializers.ValidationError(
+#                 {"error": "Your confirmation_code does not match"}
+#             )
+#         return data

@@ -3,21 +3,24 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 
 from .filters import TitleFilter
 from .permissions import AdminAccess, CommentReviewPermission, ReaderOrAdmin
 from .serializers import (CategoriesSerializer, CommentSerializer,
-                          GenresSerializer, MeSerializer,
+                          GenresSerializer,
                           MyTokenObtainPairSerializer, ReviewSerializer,
                           TitleSerializer, UserRegistrationSerializer,
                           UsersSerializer)
 from .service import send_email
+from django.db.models import Avg
+from rest_framework.views import APIView
+from django.contrib.auth.tokens import default_token_generator
 
 User = get_user_model()
 
@@ -63,12 +66,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     ViewSet для работы с произведениями.
     """
 
-    queryset = Title.objects.all()
     permission_classes = (ReaderOrAdmin,)
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_queryset(self):
+        return Title.objects.all().annotate(rating=Avg("reviews__score"))
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -91,14 +96,14 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[
             IsAuthenticated,
         ],
-        serializer_class=MeSerializer,
+        serializer_class=UsersSerializer,
     )
     def get_patch_me_user(self, request):
         """
         Получение и обновление информации о текущем пользователе.
         """
         if request.method == "PATCH":
-            serializer = MeSerializer(
+            serializer = UsersSerializer(
                 request.user,
                 data=request.data,
                 context={"request": request},
@@ -108,7 +113,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        serializer = MeSerializer(request.user)
+        serializer = UsersSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -119,7 +124,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (CommentReviewPermission,)
+    permission_classes = (CommentReviewPermission, IsAuthenticatedOrReadOnly)
     http_method_names = ["get", "post", "patch", "delete"]
 
     def perform_create(self, serializer):
@@ -147,7 +152,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ["get", "post", "patch", "delete"]
-    permission_classes = (CommentReviewPermission,)
+    permission_classes = (CommentReviewPermission, IsAuthenticatedOrReadOnly)
 
     def get_serializer_context(self):
         """
@@ -191,62 +196,46 @@ def user_registration(request):
     - UserRegistrationSerializer.ValidationError:
     Если данные пользователя некорректны.
     """
-    try:
-        user = User.objects.get(
-            email=request.data.get("email"),
-            username=request.data.get("username"),
+    serializer = UserRegistrationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data.get("email")
+    username = serializer.validated_data.get("username")
+    only_email = (
+        User.objects.filter(email=email).exists()
+        and not User.objects.filter(username=username).exists()
+    )
+    only_username = (
+        not User.objects.filter(email=email).exists()
+        and User.objects.filter(username=username).exists()
+    )
+    if only_email or only_username:
+        return Response(
+            {"error": "This username or email is already exists"},
+            status=status.HTTP_400_BAD_REQUEST
         )
-        send_email(request.data.get("email"), user)
-        return Response(request.data, status=status.HTTP_200_OK)
-    except User.DoesNotExist:
-        serializer = UserRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        email = serializer.data.get("email")
-        username = serializer.data.get("username")
-        user = User.objects.get(email=email, username=username)
-        send_email(request.data.get("email"), user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    user, created = User.objects.get_or_create(
+        email=serializer.validated_data.get("email"),
+        username=serializer.validated_data.get("username"),
+    )
+    send_email(request.data.get("email"), user)
+    return Response(request.data, status=status.HTTP_200_OK)
 
 
-class MyTokenObtainPairView(TokenObtainPairView):
-    """
-    Получение токена доступа для пользователя.
-
-    Attributes:
-    - serializer_class: Класс сериализатора для получения токена.
-    - permission_classes: Классы разрешений для доступа к представлению.
-
-    Methods:
-    - post: Обработка POST-запроса для получения токена доступа.
-
-    Raises:
-    - MyTokenObtainPairSerializer.ValidationError:
-    Если данные пользователя некорректны.
-    """
-    serializer_class = MyTokenObtainPairSerializer
+class MyTokenObtainPairView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        """
-        Обработка POST-запроса для получения токена доступа.
-
-        Parameters:
-        - request: Запрос с данными пользователя.
-
-        Returns:
-        - Response: Ответ с токеном доступа или ошибкой.
-
-        Raises:
-        - MyTokenObtainPairSerializer.ValidationError:
-        Если данные пользователя некорректны.
-        """
         serializer = MyTokenObtainPairSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data.get("username")
-            user = User.objects.get(username=username)
-            refresh = RefreshToken.for_user(user)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data.get("username")
+        confirmation_code = serializer.validated_data.get("confirmation_code")
+        user = get_object_or_404(User, username=username)
+        if not default_token_generator.check_token(user, confirmation_code):
             return Response(
-                {"token": str(refresh.access_token)},
+                {"error": "Confirmation code does not match"},
+                status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {"token": str(refresh.access_token)}
+        )

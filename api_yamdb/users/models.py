@@ -40,9 +40,7 @@ class User(AbstractUser):
         Возвращает True, если роль пользователя равна "admin"
         или если пользователь является суперпользователем, иначе False.
         """
-        if self.role == "admin" or self.is_superuser:
-            return True
-        return False
+        return self.role == "admin" or self.is_superuser
 
     @property
     def is_moderator(self):
@@ -50,9 +48,7 @@ class User(AbstractUser):
         Проверяет, является ли пользователь модератором.
         Возвращает True, если роль пользователя равна "moderator", иначе False.
         """
-        if self.role == "moderator":
-            return True
-        return False
+        return self.role == "moderator"
 
     @property
     def is_user(self):
@@ -60,9 +56,7 @@ class User(AbstractUser):
         Проверяет, является ли пользователь обычным пользователем.
         Возвращает True, если роль пользователя равна "user", иначе False.
         """
-        if self.role == "user":
-            return True
-        return False
+        return self.role == "user"
 
     def __str__(self) -> str:
         """

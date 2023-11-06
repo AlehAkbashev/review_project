@@ -17,11 +17,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "rest_framework",
-    "api.apps.ApiConfig",
+    "django_filters",
     "users.apps.UsersConfig",
     "reviews.apps.ReviewsConfig",
-    "django_filters",
+    "api.apps.ApiConfig",
 ]
 
 
@@ -43,7 +44,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 5,
+    "PAGE_SIZE": 10,
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
@@ -100,7 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = "en-en"
+LANGUAGE_CODE = "ru-RU"
 
 TIME_ZONE = "UTC"
 
@@ -113,3 +114,5 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = ((BASE_DIR / "static/"),)
+
+EMAIL_FROM = "support@yamdb.ru"
