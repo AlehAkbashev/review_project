@@ -15,7 +15,7 @@ from .serializers import (CategoriesSerializer, CommentSerializer,
                           GenresSerializer,
                           MyTokenObtainPairSerializer, ReviewSerializer,
                           TitleSerializer, UserRegistrationSerializer,
-                          UsersSerializer)
+                          UsersSerializer, TitleReadSerializer, TitleWriteSerializer)
 from .service import send_email
 from django.db.models import Avg
 from rest_framework.views import APIView
@@ -52,13 +52,18 @@ class TitleViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = (ReaderOrAdmin,)
-    serializer_class = TitleSerializer
+    # serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
         return Title.objects.all().annotate(rating=Avg("reviews__score"))
+    
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):

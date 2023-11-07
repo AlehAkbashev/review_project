@@ -27,6 +27,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def slug_name(self):
+        return {"name": self.name, "slug": self.slug}
 
 
 class Genre(models.Model):
@@ -44,6 +48,10 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def slug_name(self):
+        return {"name": self.name, "slug": self.slug}
 
 
 class Title(models.Model):

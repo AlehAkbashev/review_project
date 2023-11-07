@@ -74,13 +74,74 @@ class GenreField(serializers.RelatedField):
         return Genre.objects.all()
 
 
-class TitleSerializer(serializers.ModelSerializer):
+# class TitleSerializer(serializers.ModelSerializer):
+#     """
+#     Сериализатор тайтлов.
+#     """
+
+#     category = CategoryField()
+#     genre = GenreField(many=True)
+#     rating = serializers.IntegerField(read_only=True, default=0)
+
+#     class Meta:
+#         fields = (
+#             "id",
+#             "name",
+#             "year",
+#             "rating",
+#             "description",
+#             "genre",
+#             "category",
+#         )
+#         model = Title
+
+    # def create(self, validated_data):
+    #     """
+    #     Создает новый тайтл.
+    #     """
+
+    #     genres = validated_data.pop("genre")
+    #     title = Title.objects.create(**validated_data)
+    #     for genre in genres:
+    #         current_genre = Genre.objects.get(slug=genre["slug"])
+    #         TitleGenre.objects.create(title_id=title, genre_id=current_genre)
+    #     return title
+
+    # def update(self, instance, validated_data):
+    #     """
+    #     Обновляет информацию о тайтле.
+    #     """
+    #     instance.name = validated_data.get("name", instance.name)
+    #     instance.year = validated_data.get("year", instance.year)
+    #     instance.description = validated_data.get(
+    #         "description", instance.description
+    #     )
+    #     instance.category = validated_data.get("category", instance.category)
+    #     if "genre" in validated_data:
+    #         genre_list = []
+    #         genres = validated_data.pop("genre")
+    #         for genre in genres:
+    #             current_genre = Genre.objects.get(slug=genre["slug"])
+    #             genre_list.append(current_genre)
+    #         instance.genre.set(genre_list)
+    #     instance.save()
+    #     return instance
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
     """
     Сериализатор тайтлов.
     """
 
-    category = CategoryField()
-    genre = GenreField(many=True)
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field="slug"
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field="slug",
+        many=True
+    )
     rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
@@ -95,37 +156,30 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         model = Title
 
-    def create(self, validated_data):
-        """
-        Создает новый тайтл.
-        """
 
-        genres = validated_data.pop("genre")
-        title = Title.objects.create(**validated_data)
-        for genre in genres:
-            current_genre = Genre.objects.get(slug=genre["slug"])
-            TitleGenre.objects.create(title_id=title, genre_id=current_genre)
-        return title
+class TitleReadSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="slug_name"
+    )
+    genre = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="slug_name",
+        many=True
+    )
+    rating = serializers.IntegerField(read_only=True)
 
-    def update(self, instance, validated_data):
-        """
-        Обновляет информацию о тайтле.
-        """
-        instance.name = validated_data.get("name", instance.name)
-        instance.year = validated_data.get("year", instance.year)
-        instance.description = validated_data.get(
-            "description", instance.description
+    class Meta:
+        fields = (
+            "id",
+            "name",
+            "year",
+            "rating",
+            "description",
+            "genre",
+            "category",
         )
-        instance.category = validated_data.get("category", instance.category)
-        if "genre" in validated_data:
-            genre_list = []
-            genres = validated_data.pop("genre")
-            for genre in genres:
-                current_genre = Genre.objects.get(slug=genre["slug"])
-                genre_list.append(current_genre)
-            instance.genre.set(genre_list)
-        instance.save()
-        return instance
+        model = Title
 
 
 class CommentSerializer(serializers.ModelSerializer):
