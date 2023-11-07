@@ -120,18 +120,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(Review, id=review_id)
         serializer.save(review=review, author=self.request.user)
 
-    def perform_update(self, serializer):
-        """
-        Выполняет обновление комментария.
-        """
-        review_id = self.kwargs.get("review_id")
-        review = get_object_or_404(Review, id=review_id)
-        serializer.save(review=review, author=self.request.user)
-
     def get_queryset(self):
         review_id = self.kwargs.get("review_id")
         review = get_object_or_404(Review, id=review_id)
-        return review.comments.objects.all()
+        return review.comments.all()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -139,7 +131,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     ViewSet для работы с отзывами.
     """
 
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ["get", "post", "patch", "delete"]
     permission_classes = (CommentReviewPermission, IsAuthenticatedOrReadOnly)
@@ -160,14 +151,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = Title.objects.get(id=title_id)
         serializer.save(author=self.request.user, title=title)
 
-    def perform_update(self, serializer):
-        """
-        Выполняет обновление отзыва.
-        """
+    def get_queryset(self):
         title_id = self.kwargs.get("title_id")
         title = Title.objects.get(id=title_id)
-        serializer.save(author=self.request.user, title=title)
-
+        return title.reviews.all()
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -188,27 +175,6 @@ def user_registration(request):
     """
     serializer = UserRegistrationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    email = serializer.validated_data.get("email")
-    username = serializer.validated_data.get("username")
-    user_one = User.objects.filter(username=username)
-    user_two = User.objects.filter(email=email)
-    check_user_email = user_one == user_two
-    only_email = (
-        User.objects.filter(email=email)
-        and not User.objects.filter(username=username)
-    )
-    only_username = (
-        User.objects.filter(username=username)
-        and not User.objects.filter(email=email)
-    )
-    if not check_user_email:
-        return Response(
-            {
-                "username": "This username may be already used",
-                "email": "This email may be already used"
-            }
-            status=status.HTTP_400_BAD_REQUEST
-        )
     user, created = User.objects.get_or_create(
         email=serializer.validated_data.get("email"),
         username=serializer.validated_data.get("username"),

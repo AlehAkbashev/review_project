@@ -224,49 +224,41 @@ class UserRegistrationSerializer(serializers.Serializer):
     username = serializers.SlugField(max_length=150, required=True)
     email = serializers.EmailField(max_length=254, required=True)
 
-    def validate_username(self, data):
-        patterns = r"^[\w.@+-]+\Z"
-        if data["username"] == "me":
+    def validate_username(self, value):
+        if value == "me":
             raise serializers.ValidationError(
                 "You cannot use Me for username"
             )
-        match = re.match(patterns, data['username'])
-        if not match:
+        return value
+    
+    def validate(self, data):
+        user_with_username = User.objects.filter(
+            username=data['username']
+        ).first()
+        user_with_email = User.objects.filter(
+            email=data['email']
+        ).first()
+        if user_with_username:
+            if not user_with_email:
+                raise serializers.ValidationError(
+                    {"username": "This username is already used"}
+                )
+        elif user_with_email != user_with_username:
             raise serializers.ValidationError(
-                "Invalid username"
+                {
+                    "username": "This username is already used",
+                    'email': "This email is already used"
+                }
+            )
+        elif not user_with_username and user_with_email:
+            raise serializers.ValidationError(
+                {
+                    'email': "This email is already used"
+                }
             )
         return data
-    
-    def validate(self, attrs):
-        return super().validate(attrs)
 
 
 class MyTokenObtainPairSerializer(serializers.Serializer):
     username = serializers.SlugField(max_length=150, required=True)
     confirmation_code = serializers.CharField(required=True)
-
-
-# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-#     """
-#     Сериализатор для получения токена доступа.
-#     """
-
-#     confirmation_code = serializers.CharField(required=True)
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.fields["password"].required = False
-
-#     def validate(self, data) -> Dict[str, str]:
-#         """
-#         Проверяет данные сериализатора.
-#         """
-
-#         username = data.get("username")
-#         confirmation_code = data.get("confirmation_code")
-#         user = get_object_or_404(User, username=username)
-#         if not default_token_generator.check_token(user, confirmation_code):
-#             raise serializers.ValidationError(
-#                 {"error": "Your confirmation_code does not match"}
-#             )
-#         return data
