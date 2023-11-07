@@ -1,7 +1,9 @@
 from typing import Any
+
 from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http.request import HttpRequest
+from django.template.defaultfilters import truncatewords
 
 from .models import Category, Comment, Genre, Review, Title, TitleGenre
 
@@ -28,36 +30,33 @@ class ReviewInline(admin.StackedInline):
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "year",
-        "description",
-        "category",
-        "get_genre"
-    )
+    list_display = ("name", "year", "get_description", "category", "get_genre")
     list_editable = (
         "year",
-        "description",
         "category",
     )
     list_filter = ("year",)
     search_fields = (
         "name",
-        "description",
+        "get_description",
     )
     list_display_links = ("name",)
     inlines = [
         TitleGenreInline,
     ]
-    ordering = ("id", )
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         current_qs = super().get_queryset(request)
-        return current_qs.prefetch_related('genre')
+        return current_qs.prefetch_related("genre")
 
     @admin.display(description="genre")
     def get_genre(self, obj):
         return "\n".join([genre.name for genre in obj.genre.all()])
+
+    def get_description(self, obj):
+        return truncatewords(obj.description, 5)
+
+    get_description.short_description = "description"
 
 
 @admin.register(Category)

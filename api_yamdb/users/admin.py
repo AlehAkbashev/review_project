@@ -15,6 +15,6 @@ class UsersAdmin(admin.ModelAdmin):
         "is_superuser",
         "is_admin",
         "is_moderator",
-        "is_user"
+        "is_user",
     )
     list_editable = ("role",)

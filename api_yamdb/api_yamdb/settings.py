@@ -17,7 +17,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "django_filters",
     "users.apps.UsersConfig",
@@ -127,14 +126,12 @@ REVIEW_TEXT_MAX_LENGTH = 256
 
 USERNAME_MAX_LENGTH = 150
 
-PASSWORD_MAX_LENGTH = 255
-
 EMAIL_MAX_LENGTH = 254
 
 ROLE_MAX_LENGTH = 255
 
-USER_ROLE = 'user'
+USER_ROLE = "user"
 
-MODERATOR_ROLE = 'moderator'
+MODERATOR_ROLE = "moderator"
 
-ADMIN_ROLE = 'admin'
+ADMIN_ROLE = "admin"
