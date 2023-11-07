@@ -3,6 +3,15 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 from .validators import validate_username
+from api_yamdb.settings import (
+    ADMIN_ROLE,
+    EMAIL_MAX_LENGTH,
+    MODERATOR_ROLE,
+    PASSWORD_MAX_LENGTH,
+    ROLE_MAX_LENGTH,
+    USER_ROLE,
+    USERNAME_MAX_LENGTH,
+)
 
 
 class User(AbstractUser):
@@ -12,21 +21,29 @@ class User(AbstractUser):
     """
 
     CHOICES = (
-        ("user", "user"),
-        ("moderator", "moderator"),
-        ("admin", "admin"),
+        (USER_ROLE, "user"),
+        (MODERATOR_ROLE, "moderator"),
+        (ADMIN_ROLE, "admin"),
     )
 
-    email = models.EmailField(unique=True, max_length=254)
+    email = models.EmailField(
+        unique=True,
+        max_length=EMAIL_MAX_LENGTH
+    )
     username = models.SlugField(
         unique=True,
-        max_length=150,
+        max_length=USERNAME_MAX_LENGTH,
         validators=[validate_username],
     )
-    password = models.CharField(blank=True, null=True, max_length=255)
-    bio = models.TextField(blank=True, verbose_name="Biography")
+    bio = models.TextField(
+        blank=True,
+        verbose_name="Biography"
+    )
     role = models.SlugField(
-        default="user", verbose_name="Role", choices=CHOICES
+        max_length=ROLE_MAX_LENGTH,
+        default=USER_ROLE,
+        verbose_name="Role",
+        choices=CHOICES
     )
 
     class Meta:
