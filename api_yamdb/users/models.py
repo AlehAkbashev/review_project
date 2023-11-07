@@ -7,7 +7,6 @@ from api_yamdb.settings import (
     ADMIN_ROLE,
     EMAIL_MAX_LENGTH,
     MODERATOR_ROLE,
-    PASSWORD_MAX_LENGTH,
     ROLE_MAX_LENGTH,
     USER_ROLE,
     USERNAME_MAX_LENGTH,
@@ -55,11 +54,10 @@ class User(AbstractUser):
         """
         Проверяет, является ли пользователь администратором.
         Возвращает True, если роль пользователя равна "admin"
-        или если пользователь является суперпользователем, иначе False.
+        или если пользователь является
+        суперпользователем или стаффом, иначе False.
         """
-        if self.role == "admin" or self.is_superuser:
-            return True
-        return False
+        return self.role == "admin" or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):
@@ -67,9 +65,7 @@ class User(AbstractUser):
         Проверяет, является ли пользователь модератором.
         Возвращает True, если роль пользователя равна "moderator", иначе False.
         """
-        if self.role == "moderator":
-            return True
-        return False
+        return self.role == "moderator"
 
     @property
     def is_user(self):
@@ -77,9 +73,7 @@ class User(AbstractUser):
         Проверяет, является ли пользователь обычным пользователем.
         Возвращает True, если роль пользователя равна "user", иначе False.
         """
-        if self.role == "user":
-            return True
-        return False
+        return self.role == "user"
 
     def __str__(self) -> str:
         """
