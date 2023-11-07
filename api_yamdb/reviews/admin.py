@@ -1,4 +1,7 @@
+from typing import Any
 from django.contrib import admin
+from django.db.models.query import QuerySet
+from django.http.request import HttpRequest
 
 from .models import Category, Comment, Genre, Review, Title, TitleGenre
 
@@ -30,6 +33,7 @@ class TitleAdmin(admin.ModelAdmin):
         "year",
         "description",
         "category",
+        "get_genre"
     )
     list_editable = (
         "year",
@@ -45,7 +49,15 @@ class TitleAdmin(admin.ModelAdmin):
     inlines = [
         TitleGenreInline,
     ]
-    filter_horizontal = ("genre",)
+    ordering = ("id", )
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+        current_qs = super().get_queryset(request)
+        return current_qs.prefetch_related('genre')
+
+    @admin.display(description="genre")
+    def get_genre(self, obj):
+        return "\n".join([genre.name for genre in obj.genre.all()])
 
 
 @admin.register(Category)
