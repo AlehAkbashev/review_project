@@ -26,7 +26,7 @@ class User(AbstractUser):
         max_length=USERNAME_MAX_LENGTH,
         validators=[validate_username],
     )
-    bio = models.TextField(blank=True, verbose_name="Biography")
+    bio = models.TextField(blank=True, verbose_name="Биография")
     role = models.SlugField(
         max_length=ROLE_MAX_LENGTH,
         default=USER_ROLE,
@@ -35,8 +35,8 @@ class User(AbstractUser):
     )
 
     class Meta:
-        verbose_name = "User"
-        verbose_name_plural = "Users"
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
     @property
     def is_admin(self):
