@@ -6,14 +6,6 @@ from api_yamdb.settings import (ADMIN_ROLE, EMAIL_MAX_LENGTH, MODERATOR_ROLE,
                                 USERNAME_MAX_LENGTH)
 
 from .validators import validate_username
-from api_yamdb.settings import (
-    ADMIN_ROLE,
-    EMAIL_MAX_LENGTH,
-    MODERATOR_ROLE,
-    ROLE_MAX_LENGTH,
-    USER_ROLE,
-    USERNAME_MAX_LENGTH,
-)
 
 
 class User(AbstractUser):
