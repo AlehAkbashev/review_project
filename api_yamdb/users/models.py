@@ -6,6 +6,14 @@ from api_yamdb.settings import (ADMIN_ROLE, EMAIL_MAX_LENGTH, MODERATOR_ROLE,
                                 USERNAME_MAX_LENGTH)
 
 from .validators import validate_username
+from api_yamdb.settings import (
+    ADMIN_ROLE,
+    EMAIL_MAX_LENGTH,
+    MODERATOR_ROLE,
+    ROLE_MAX_LENGTH,
+    USER_ROLE,
+    USERNAME_MAX_LENGTH,
+)
 
 
 class User(AbstractUser):
@@ -43,10 +51,10 @@ class User(AbstractUser):
         """
         Проверяет, является ли пользователь администратором.
         Возвращает True, если роль пользователя равна "admin"
-        или если пользователь является суперпользователем, иначе False.
+        или если пользователь является
+        суперпользователем или стаффом, иначе False.
         """
-
-        return self.role == "admin" or self.is_superuser
+        return self.role == "admin" or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):
@@ -54,7 +62,6 @@ class User(AbstractUser):
         Проверяет, является ли пользователь модератором.
         Возвращает True, если роль пользователя равна "moderator", иначе False.
         """
-
         return self.role == "moderator"
 
     @property
@@ -63,7 +70,6 @@ class User(AbstractUser):
         Проверяет, является ли пользователь обычным пользователем.
         Возвращает True, если роль пользователя равна "user", иначе False.
         """
-
         return self.role == "user"
 
     def __str__(self) -> str:
