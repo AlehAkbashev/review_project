@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.db import models
+
+from api_yamdb.settings import (ADMIN_ROLE, EMAIL_MAX_LENGTH, MODERATOR_ROLE,
+                                ROLE_MAX_LENGTH, USER_ROLE,
+                                USERNAME_MAX_LENGTH)
 
 from .validators import validate_username
 
@@ -12,37 +15,38 @@ class User(AbstractUser):
     """
 
     CHOICES = (
-        ("user", "user"),
-        ("moderator", "moderator"),
-        ("admin", "admin"),
+        (USER_ROLE, "user"),
+        (MODERATOR_ROLE, "moderator"),
+        (ADMIN_ROLE, "admin"),
     )
 
-    email = models.EmailField(unique=True, max_length=254)
-    username = models.CharField(
+    email = models.EmailField(unique=True, max_length=EMAIL_MAX_LENGTH)
+    username = models.SlugField(
         unique=True,
-        max_length=150,
-        validators=[validate_username, RegexValidator(regex=r"^[\w.@+-]+\Z")],
+        max_length=USERNAME_MAX_LENGTH,
+        validators=[validate_username],
     )
-    password = models.CharField(blank=True, null=True, max_length=255)
-    bio = models.TextField(blank=True, verbose_name="Biography")
+    bio = models.TextField(blank=True, verbose_name="Биография")
     role = models.SlugField(
-        default="user", verbose_name="Role", choices=CHOICES
+        max_length=ROLE_MAX_LENGTH,
+        default=USER_ROLE,
+        verbose_name="Role",
+        choices=CHOICES,
     )
 
     class Meta:
-        verbose_name = "User"
-        verbose_name_plural = "Users"
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
     @property
     def is_admin(self):
         """
         Проверяет, является ли пользователь администратором.
         Возвращает True, если роль пользователя равна "admin"
-        или если пользователь является суперпользователем, иначе False.
+        или если пользователь является
+        суперпользователем или стаффом, иначе False.
         """
-        if self.role == "admin" or self.is_superuser:
-            return True
-        return False
+        return self.role == "admin" or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):
@@ -50,9 +54,7 @@ class User(AbstractUser):
         Проверяет, является ли пользователь модератором.
         Возвращает True, если роль пользователя равна "moderator", иначе False.
         """
-        if self.role == "moderator":
-            return True
-        return False
+        return self.role == "moderator"
 
     @property
     def is_user(self):
@@ -60,12 +62,11 @@ class User(AbstractUser):
         Проверяет, является ли пользователь обычным пользователем.
         Возвращает True, если роль пользователя равна "user", иначе False.
         """
-        if self.role == "user":
-            return True
-        return False
+        return self.role == "user"
 
     def __str__(self) -> str:
         """
         Возвращает строковое представление объекта User (имя пользователя).
         """
+
         return str(self.username)
