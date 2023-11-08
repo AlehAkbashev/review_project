@@ -30,22 +30,6 @@ class ReaderOrAdmin(permissions.BasePermission):
             return True
         return request.user.is_authenticated and request.user.is_admin
 
-    # def has_object_permission(self, request, view, obj):
-    #     """
-    #     Проверяет разрешение доступа на уровне объекта.
-
-    #     Parameters:
-    #     - request: Запрос пользователя.
-    #     - view: Представление, к которому выполняется запрос.
-    #     - obj: Объект, к которому выполняется запрос.
-
-    #     Returns:
-    #     - bool: True, если доступ разрешен, иначе False.
-    #     """
-    #     if request.method in permissions.SAFE_METHODS:
-    #         return True
-    #     return request.user.role == "admin" or request.user.is_superuser
-
 
 class AdminAccess(permissions.BasePermission):
     """
@@ -85,21 +69,6 @@ class CommentReviewPermission(permissions.BasePermission):
     - has_object_permission: Проверяет разрешение доступа на уровне объекта.
     """
 
-    # def has_permission(self, request, view):
-    #     """
-    #     Проверяет разрешение доступа на уровне представления.
-
-    #     Parameters:
-    #     - request: Запрос пользователя.
-    #     - view: Представление, к которому выполняется запрос.
-
-    #     Returns:
-    #     - bool: True, если доступ разрешен, иначе False.
-    #     """
-    #     if request.method in permissions.SAFE_METHODS:
-    #         return True
-    #     return request.user.is_authenticated
-
     def has_object_permission(self, request, view, obj):
         """
         Проверяет разрешение доступа на уровне объекта.
@@ -118,6 +87,5 @@ class CommentReviewPermission(permissions.BasePermission):
                 request.user == obj.author
                 or request.user.is_admin
                 or request.user.is_moderator
-                # or request.user.is_superuser
             )
         )
