@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+
 from reviews.models import Title
 
 
@@ -8,11 +9,10 @@ class TitleFilter(filters.FilterSet):
 
     Позволяет фильтровать записи по категории, жанру, году и имени.
     """
+
     category = filters.CharFilter(field_name="category__slug")
     genre = filters.CharFilter(field_name="genre__slug")
-    year = filters.NumberFilter()
-    name = filters.CharFilter()
 
     class Meta:
-        fields = ["category", "genre", "year", "name"]
+        fields = ("category", "genre", "year", "name")
         model = Title

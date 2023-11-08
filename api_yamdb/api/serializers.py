@@ -1,13 +1,9 @@
-import datetime as dt
-from typing import Dict
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
+
+from api_yamdb.settings import EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -78,14 +74,18 @@ class GenreField(serializers.RelatedField):
         return Genre.objects.all()
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleWriteSerializer(serializers.ModelSerializer):
     """
-    Сериализатор тайтлов.
+    Сериализатор для записи произведений.
     """
 
-    category = CategoryField()
-    genre = GenreField(many=True)
-    rating = serializers.SerializerMethodField(read_only=True)
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(), slug_field="slug"
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(), slug_field="slug", many=True
+    )
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = (
@@ -99,53 +99,42 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         model = Title
 
-    def validate_year(self, value):
-        """
-        Проверяет год выпуска тайтла.
-        """
-        current_year = dt.date.today().year
-        if value > current_year + 1:
-            raise serializers.ValidationError("Check year of title")
-        return value
-
-    def create(self, validated_data):
-        """
-        Создает новый тайтл.
-        """
-        genres = validated_data.pop("genre")
-        title = Title.objects.create(**validated_data)
+    def to_representation(self, instance):
+        category = instance.category
+        genres = instance.genre.all()
+        genres_list = []
         for genre in genres:
-            current_genre = Genre.objects.get(slug=genre["slug"])
-            TitleGenre.objects.create(title_id=title, genre_id=current_genre)
+            genres_list.append({"name": genre.name, "slug": genre.slug})
+        title = super().to_representation(instance)
+        title["genre"] = genres_list
+        title["category"] = {"name": category.name, "slug": category.slug}
         return title
 
-    def update(self, instance, validated_data):
-        """
-        Обновляет информацию о тайтле.
-        """
-        instance.name = validated_data.get("name", instance.name)
-        instance.year = validated_data.get("year", instance.year)
-        instance.description = validated_data.get(
-            "description", instance.description
-        )
-        instance.category = validated_data.get("category", instance.category)
-        if "genre" in validated_data:
-            genre_list = []
-            genres = validated_data.pop("genre")
-            for genre in genres:
-                current_genre = Genre.objects.get(slug=genre["slug"])
-                genre_list.append(current_genre)
-            instance.genre.set(genre_list)
-        instance.save()
-        return instance
 
-    def get_rating(self, obj):
-        """
-        Возвращает средний рейтинг тайтла.
-        """
-        title = Title.objects.get(pk=obj.id)
-        rating = Review.objects.filter(title=title).aggregate(Avg("score"))
-        return rating["score__avg"]
+class TitleReadSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для чтения произведений.
+    """
+
+    category = serializers.SlugRelatedField(
+        read_only=True, slug_field="slug_name"
+    )
+    genre = serializers.SlugRelatedField(
+        read_only=True, slug_field="slug_name", many=True
+    )
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = (
+            "id",
+            "name",
+            "year",
+            "rating",
+            "description",
+            "genre",
+            "category",
+        )
+        model = Title
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -186,17 +175,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         Проверяет данные сериализатора.
         """
         data = super().validate(data)
-        try:
+        if self.context["request"].method == "POST":
             title = get_object_or_404(Title, pk=self.context["title_id"])
-            Review.objects.get(
+            if Review.objects.filter(
                 title=title, author=self.context["request"].user
-            )
-            if self.context["request"].method == "PATCH":
-                return data
-            raise serializers.ValidationError(
-                "You cannot write more than one review on the same title"
-            )
-        except Review.DoesNotExist:
+            ).exists():
+                raise serializers.ValidationError(
+                    "You cannot write more than one review on the same title"
+                )
+            return data
+        if self.context["request"].method == "PATCH":
             return data
 
     def update(self, instance, validated_data):
@@ -225,63 +213,59 @@ class UsersSerializer(serializers.ModelSerializer):
         )
         model = User
 
-
-class MeSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели User.
-    """
-
-    class Meta:
-        fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "bio",
-            "role",
-        )
-        model = User
-
     def validate_role(self, value):
         """
         Проверяет роль пользователя.
         """
         if (
-                self.context.get("request").user.role != "admin"
-                and not self.context.get("request").user.is_superuser
+            self.context.get("request").method == "PATCH"
+            and not self.context.get("request").user.is_admin
         ):
             return self.context.get("request").user.role
         return value
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(serializers.Serializer):
     """
     Сериализатор для регистрации пользователя.
     """
 
-    class Meta:
-        fields = ("email", "username")
-        model = User
+    username = serializers.SlugField(
+        max_length=USERNAME_MAX_LENGTH, required=True
+    )
+    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH, required=True)
 
+    def validate_username(self, value):
+        if value == "me":
+            raise serializers.ValidationError("You cannot use Me for username")
+        return value
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """
-    Сериализатор для получения токена доступа.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["password"].required = False
-
-    def validate(self, data) -> Dict[str, str]:
-        """
-        Проверяет данные сериализатора.
-        """
-        username = data.get("username")
-        confirmation_code = data.get("confirmation_code")
-        user = get_object_or_404(User, username=username)
-        if not default_token_generator.check_token(user, confirmation_code):
+    def validate(self, data):
+        user_with_username = User.objects.filter(
+            username=data["username"]
+        ).first()
+        user_with_email = User.objects.filter(email=data["email"]).first()
+        if user_with_username:
+            if not user_with_email:
+                raise serializers.ValidationError(
+                    {"username": "This username is already used"}
+                )
+        elif user_with_email != user_with_username:
             raise serializers.ValidationError(
-                {"error": "Your confirmation_code does not match"}
+                {
+                    "username": "This username is already used",
+                    "email": "This email is already used",
+                }
+            )
+        elif not user_with_username and user_with_email:
+            raise serializers.ValidationError(
+                {"email": "This email is already used"}
             )
         return data
+
+
+class MyTokenObtainPairSerializer(serializers.Serializer):
+    username = serializers.SlugField(
+        max_length=USERNAME_MAX_LENGTH, required=True
+    )
+    confirmation_code = serializers.CharField(required=True)

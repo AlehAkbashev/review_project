@@ -2,6 +2,7 @@ import csv
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 
 User = get_user_model()
@@ -24,10 +25,7 @@ def import_data():
     for key, value in dictionary.items():
         with open(key, encoding="utf8") as csvfile:
             reader = csv.DictReader(csvfile)
-            objs = [
-                value(**row)
-                for row in reader
-            ]
+            objs = [value(**row) for row in reader]
             value.objects.bulk_create(objs)
 
     with open("static/data/titles.csv", encoding="utf8") as csvfile:

@@ -1,10 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from api_yamdb.settings import (
-    REVIEW_TEXT_MAX_LENGTH,
-    TITLE_NAME_MAX_LENGTH
-)
+from api_yamdb.settings import REVIEW_TEXT_MAX_LENGTH, TITLE_NAME_MAX_LENGTH
 
 from .mixins import CommonDataAbstractModel
 from .validators import validate_year
@@ -18,11 +15,15 @@ class Category(CommonDataAbstractModel):
     """
 
     class Meta(CommonDataAbstractModel.Meta):
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
 
     def __str__(self):
         return self.name
+
+    @property
+    def slug_name(self):
+        return {"name": self.name, "slug": self.slug}
 
 
 class Genre(CommonDataAbstractModel):
@@ -31,11 +32,15 @@ class Genre(CommonDataAbstractModel):
     """
 
     class Meta(CommonDataAbstractModel.Meta):
-        verbose_name = 'Жанр'
-        verbose_name_plural = 'Жанры'
+        verbose_name = "Жанр"
+        verbose_name_plural = "Жанры"
 
     def __str__(self):
         return self.name
+
+    @property
+    def slug_name(self):
+        return {"name": self.name, "slug": self.slug}
 
 
 class Title(models.Model):
@@ -44,8 +49,7 @@ class Title(models.Model):
     """
 
     name = models.CharField(
-        max_length=TITLE_NAME_MAX_LENGTH,
-        verbose_name="title_name"
+        max_length=TITLE_NAME_MAX_LENGTH, verbose_name="title_name"
     )
     year = models.PositiveSmallIntegerField(
         verbose_name="title_year",
@@ -54,8 +58,7 @@ class Title(models.Model):
         ],
     )
     description = models.TextField(
-        blank=True,
-        verbose_name="title_description"
+        blank=True, verbose_name="title_description"
     )
     category = models.ForeignKey(
         Category,
@@ -71,9 +74,9 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['-name']
-        verbose_name = 'Заголовок'
-        verbose_name_plural = 'Заголовки'
+        ordering = ["-name"]
+        verbose_name = "Произведение"
+        verbose_name_plural = "Произведения"
 
     def __str__(self):
         return self.name
@@ -107,8 +110,7 @@ class Review(models.Model):
     """
 
     text = models.TextField(
-        max_length=REVIEW_TEXT_MAX_LENGTH,
-        verbose_name="review_text"
+        max_length=REVIEW_TEXT_MAX_LENGTH, verbose_name="review_text"
     )
     title = models.ForeignKey(
         Title,
@@ -123,25 +125,20 @@ class Review(models.Model):
         related_name="reviews",
     )
     score = models.PositiveSmallIntegerField(
-        verbose_name="review_score",
-        choices=[
-            (i, i) for i in range(1, 11)
-        ]
+        verbose_name="review_score", choices=[(i, i) for i in range(1, 11)]
     )
     pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="review_pub_date"
+        auto_now_add=True, verbose_name="review_pub_date"
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["author", "title"],
-                name="unique_author_title"
+                fields=["author", "title"], name="unique_author_title"
             )
         ]
-        verbose_name = 'Ревью'
-        verbose_name_plural = 'Ревью'
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
 
     def __str__(self):
         return self.text
@@ -152,9 +149,7 @@ class Comment(models.Model):
     Модель для комментариев.
     """
 
-    text = models.TextField(
-        verbose_name="comment_text"
-    )
+    text = models.TextField(verbose_name="comment_text")
     review = models.ForeignKey(
         "Review",
         on_delete=models.CASCADE,
@@ -168,13 +163,12 @@ class Comment(models.Model):
         related_name="comments",
     )
     pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="comment_pub_date"
+        auto_now_add=True, verbose_name="comment_pub_date"
     )
 
     class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
 
     def __str__(self):
         return self.text

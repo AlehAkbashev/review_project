@@ -1,16 +1,11 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.db import models
 
+from api_yamdb.settings import (ADMIN_ROLE, EMAIL_MAX_LENGTH, MODERATOR_ROLE,
+                                ROLE_MAX_LENGTH, USER_ROLE,
+                                USERNAME_MAX_LENGTH)
+
 from .validators import validate_username
-from api_yamdb.settings import (
-    ADMIN_ROLE,
-    EMAIL_MAX_LENGTH,
-    MODERATOR_ROLE,
-    ROLE_MAX_LENGTH,
-    USER_ROLE,
-    USERNAME_MAX_LENGTH,
-)
 
 
 class User(AbstractUser):
@@ -25,29 +20,23 @@ class User(AbstractUser):
         (ADMIN_ROLE, "admin"),
     )
 
-    email = models.EmailField(
-        unique=True,
-        max_length=EMAIL_MAX_LENGTH
-    )
-    username = models.CharField(
+    email = models.EmailField(unique=True, max_length=EMAIL_MAX_LENGTH)
+    username = models.SlugField(
         unique=True,
         max_length=USERNAME_MAX_LENGTH,
-        validators=[validate_username, RegexValidator(regex=r"^[\w.@+-]+\Z")],
+        validators=[validate_username],
     )
-    bio = models.TextField(
-        blank=True,
-        verbose_name="Biography"
-    )
+    bio = models.TextField(blank=True, verbose_name="Биография")
     role = models.SlugField(
         max_length=ROLE_MAX_LENGTH,
         default=USER_ROLE,
         verbose_name="Role",
-        choices=CHOICES
+        choices=CHOICES,
     )
 
     class Meta:
-        verbose_name = "User"
-        verbose_name_plural = "Users"
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
     @property
     def is_admin(self):
@@ -79,4 +68,5 @@ class User(AbstractUser):
         """
         Возвращает строковое представление объекта User (имя пользователя).
         """
+
         return str(self.username)
