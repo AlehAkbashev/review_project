@@ -3,7 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -21,20 +21,9 @@ from .serializers import (CategoriesSerializer, CommentSerializer,
                           TitleWriteSerializer, UserRegistrationSerializer,
                           UsersSerializer)
 from .service import send_email
+from .mixins import CategoryGenreMixin
 
 User = get_user_model()
-
-
-class CategoryGenreMixin(
-    viewsets.GenericViewSet,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-):
-    permission_classes = (ReaderOrAdmin,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("name",)
-    lookup_field = "slug"
 
 
 class GenreViewSet(CategoryGenreMixin):
