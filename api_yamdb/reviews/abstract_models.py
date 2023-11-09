@@ -1,4 +1,3 @@
-from django.core.validators import RegexValidator
 from django.conf import settings
 from django.db import models
 
@@ -13,19 +12,13 @@ class CommonDataAbstractModel(models.Model):
         max_length=settings.NAME_MAX_LENGTH, verbose_name="category_name"
     )
     slug = models.SlugField(
-        max_length=settings.SLUG_MAX_LENGTH,
-        validators=[
-            RegexValidator(
-                regex=r"^[-a-zA-Z0-9_]+$", message="Slug is not correct"
-            )
-        ],
         verbose_name="category_slug",
         unique=True,
     )
 
     class Meta:
         abstract = True
-        ordering = ["-name"]
+        ordering = ('-name',)
 
     def __str__(self):
         return self.name[:settings.NAME_OBJECT_MAX_LENGTH]
@@ -48,7 +41,7 @@ class CommonDataAbstractModelTwo(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-name']
+        ordering = ('-name',)
 
     def __str__(self):
         return self.text[:settings.NAME_OBJECT_MAX_LENGTH]
