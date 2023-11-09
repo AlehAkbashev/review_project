@@ -1,7 +1,6 @@
 from django.core.validators import RegexValidator
+from django.conf import settings
 from django.db import models
-
-from api_yamdb.settings import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
 
 class CommonDataAbstractModel(models.Model):
@@ -11,10 +10,10 @@ class CommonDataAbstractModel(models.Model):
     """
 
     name = models.CharField(
-        max_length=NAME_MAX_LENGTH, verbose_name="category_name"
+        max_length=settings.NAME_MAX_LENGTH, verbose_name="category_name"
     )
     slug = models.SlugField(
-        max_length=SLUG_MAX_LENGTH,
+        max_length=settings.SLUG_MAX_LENGTH,
         validators=[
             RegexValidator(
                 regex=r"^[-a-zA-Z0-9_]+$", message="Slug is not correct"
@@ -27,3 +26,29 @@ class CommonDataAbstractModel(models.Model):
     class Meta:
         abstract = True
         ordering = ["-name"]
+
+    def __str__(self):
+        return self.name[:settings.NAME_OBJECT_MAX_LENGTH]
+
+
+class CommonDataAbstractModelTwo(models.Model):
+    """
+    Абстрактная модель для хранения одинаковых полей
+    моделей Comment и Review.
+    """
+
+    text = models.TextField(
+        max_length=settings.REVIEW_TEXT_MAX_LENGTH,
+        verbose_name="review_text"
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="comment_pub_date"
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ['-name']
+
+    def __str__(self):
+        return self.text[:settings.NAME_OBJECT_MAX_LENGTH]

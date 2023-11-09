@@ -1,9 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db import models
 
-from api_yamdb.settings import REVIEW_TEXT_MAX_LENGTH, TITLE_NAME_MAX_LENGTH
+from .mixins import (
+    CommonDataAbstractModel,
+    CommonDataAbstractModelTwo
+)
 
-from .mixins import CommonDataAbstractModel
 from .validators import validate_year
 
 User = get_user_model()
@@ -17,9 +20,6 @@ class Category(CommonDataAbstractModel):
     class Meta(CommonDataAbstractModel.Meta):
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
-
-    def __str__(self):
-        return self.name
 
     @property
     def slug_name(self):
@@ -36,7 +36,7 @@ class Genre(CommonDataAbstractModel):
         verbose_name_plural = "Жанры"
 
     def __str__(self):
-        return self.name
+        return self.name[:settings.OBJECT_MAX_LENGTH]
 
     @property
     def slug_name(self):
@@ -49,7 +49,8 @@ class Title(models.Model):
     """
 
     name = models.CharField(
-        max_length=TITLE_NAME_MAX_LENGTH, verbose_name="title_name"
+        max_length=settings.TITLE_NAME_MAX_LENGTH,
+        verbose_name="title_name"
     )
     year = models.PositiveSmallIntegerField(
         verbose_name="title_year",
@@ -64,12 +65,12 @@ class Title(models.Model):
         Category,
         on_delete=models.CASCADE,
         verbose_name="title_categories",
-        related_name="categories",
+        related_name="titles",
     )
     genre = models.ManyToManyField(
         Genre,
         verbose_name="title_genres",
-        related_name="genre",
+        related_name="titles",
         through="TitleGenre",
     )
 
@@ -79,7 +80,7 @@ class Title(models.Model):
         verbose_name_plural = "Произведения"
 
     def __str__(self):
-        return self.name
+        return self.name[:settings.OBJECT_MAX_LENGTH]
 
 
 class TitleGenre(models.Model):
@@ -104,14 +105,11 @@ class TitleGenre(models.Model):
         return f"{self.title_id} {self.genre_id}"
 
 
-class Review(models.Model):
+class Review(CommonDataAbstractModelTwo):
     """
     Модель для отзывов.
     """
 
-    text = models.TextField(
-        max_length=REVIEW_TEXT_MAX_LENGTH, verbose_name="review_text"
-    )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -125,36 +123,31 @@ class Review(models.Model):
         related_name="reviews",
     )
     score = models.PositiveSmallIntegerField(
-        verbose_name="review_score", choices=[(i, i) for i in range(1, 11)]
-    )
-    pub_date = models.DateTimeField(
-        auto_now_add=True, verbose_name="review_pub_date"
+        verbose_name="review_score",
+        choices=[(i, i) for i in range(1, 11)]
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["author", "title"], name="unique_author_title"
+                fields=["author", "title"],
+                name="unique_author_title"
             )
         ]
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
 
-    def __str__(self):
-        return self.text
 
-
-class Comment(models.Model):
+class Comment(CommonDataAbstractModelTwo):
     """
     Модель для комментариев.
     """
 
-    text = models.TextField(verbose_name="comment_text")
     review = models.ForeignKey(
         "Review",
         on_delete=models.CASCADE,
         verbose_name="comment_review",
-        related_name="comments",
+        related_name="comments"
     )
     author = models.ForeignKey(
         User,
@@ -162,13 +155,7 @@ class Comment(models.Model):
         verbose_name="comment_author",
         related_name="comments",
     )
-    pub_date = models.DateTimeField(
-        auto_now_add=True, verbose_name="comment_pub_date"
-    )
 
     class Meta:
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
-
-    def __str__(self):
-        return self.text
