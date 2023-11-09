@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.conf import settings
+from django.conf import settings as s
 from django.db import models
 
 from .abstract_models import (
@@ -36,7 +36,7 @@ class Genre(CommonDataAbstractModel):
         verbose_name_plural = "Жанры"
 
     def __str__(self):
-        return self.name[:settings.OBJECT_MAX_LENGTH]
+        return self.name[:s.OBJECT_MAX_LENGTH]
 
     @property
     def slug_name(self):
@@ -49,7 +49,7 @@ class Title(models.Model):
     """
 
     name = models.CharField(
-        max_length=settings.TITLE_NAME_MAX_LENGTH,
+        max_length=s.COMMON_MAX_LENGTH,
         verbose_name="title_name"
     )
     year = models.PositiveSmallIntegerField(
@@ -59,7 +59,8 @@ class Title(models.Model):
         ],
     )
     description = models.TextField(
-        blank=True, verbose_name="title_description"
+        blank=True,
+        verbose_name="title_description"
     )
     category = models.ForeignKey(
         Category,
@@ -80,7 +81,7 @@ class Title(models.Model):
         verbose_name_plural = "Произведения"
 
     def __str__(self):
-        return self.name[:settings.OBJECT_MAX_LENGTH]
+        return self.name[:s.OBJECT_MAX_LENGTH]
 
 
 class TitleGenre(models.Model):

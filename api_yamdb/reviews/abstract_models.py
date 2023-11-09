@@ -1,4 +1,4 @@
-from django.conf import settings
+from django.conf import settings as s
 from django.db import models
 
 
@@ -9,7 +9,7 @@ class CommonDataAbstractModel(models.Model):
     """
 
     name = models.CharField(
-        max_length=settings.NAME_MAX_LENGTH, verbose_name="category_name"
+        max_length=s.COMMON_MAX_LENGTH, verbose_name="category_name"
     )
     slug = models.SlugField(
         verbose_name="category_slug",
@@ -21,7 +21,7 @@ class CommonDataAbstractModel(models.Model):
         ordering = ('-name',)
 
     def __str__(self):
-        return self.name[:settings.NAME_OBJECT_MAX_LENGTH]
+        return self.name[:s.NAME_OBJECT_MAX_LENGTH]
 
 
 class CommonDataAbstractModelTwo(models.Model):
@@ -31,7 +31,7 @@ class CommonDataAbstractModelTwo(models.Model):
     """
 
     text = models.TextField(
-        max_length=settings.REVIEW_TEXT_MAX_LENGTH,
+        max_length=s.COMMON_MAX_LENGTH,
         verbose_name="review_text"
     )
     pub_date = models.DateTimeField(
@@ -44,4 +44,4 @@ class CommonDataAbstractModelTwo(models.Model):
         ordering = ('-name',)
 
     def __str__(self):
-        return self.text[:settings.NAME_OBJECT_MAX_LENGTH]
+        return self.text[:s.NAME_OBJECT_MAX_LENGTH]
