@@ -22,8 +22,20 @@ from .serializers import (CategoriesSerializer, CommentSerializer,
                           UsersSerializer)
 from .service import send_email
 from .mixins import CategoryGenreMixin
+from django.db import models
 
 User = get_user_model()
+
+
+def get_model_obj(self, model: models.Model, key: str) -> models.Model or None:
+    id = self.kwargs.get(key)
+    return get_object_or_404(model, pk=id)
+
+
+def get_review_obj(self, key: str) -> models.Model or None:
+    title = get_model_obj(self, Title, "title_id")
+    review_id = self.kwargs.get(key)
+    return get_object_or_404(Review, id=review_id, title=title)
 
 
 class GenreViewSet(CategoryGenreMixin):
@@ -47,7 +59,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ("get", "post", "patch", "delete")
 
     def get_queryset(self):
-        return Title.objects.all().annotate(rating=Avg("reviews__score"))
+        return Title.objects.all().annotate(
+            rating=Avg("reviews__score")
+        ).order_by('-name')
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -107,13 +121,13 @@ class CommentViewSet(viewsets.ModelViewSet):
         """
         Выполняет создание комментария.
         """
-        review_id = self.kwargs.get("review_id")
-        review = get_object_or_404(Review, id=review_id)
+
+        review = get_review_obj(self, "review_id")
         serializer.save(review=review, author=self.request.user)
 
     def get_queryset(self):
-        review_id = self.kwargs.get("review_id")
-        review = get_object_or_404(Review, id=review_id)
+
+        review = get_review_obj(self, "review_id")
         return review.comments.all()
 
 
@@ -140,13 +154,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         Выполняет создание отзыва.
         """
 
-        title_id = self.kwargs.get("title_id")
-        title = Title.objects.get(id=title_id)
+        title = get_model_obj(self, Title, "title_id")
         serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
-        title_id = self.kwargs.get("title_id")
-        title = Title.objects.get(id=title_id)
+        title = get_model_obj(self, Title, "title_id")
         return title.reviews.all()
 
 
@@ -169,7 +181,7 @@ def user_registration(request):
     """
     serializer = UserRegistrationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user, created = User.objects.get_or_create(
+    user, _ = User.objects.get_or_create(
         email=serializer.validated_data.get("email"),
         username=serializer.validated_data.get("username"),
     )
