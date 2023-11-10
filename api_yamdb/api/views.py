@@ -11,31 +11,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.filters import TitleFilter
+from api.mixins import CategoryGenreMixin
+from api.permissions import AdminAccess, CommentReviewPermission, ReaderOrAdmin
+from api.serializers import (CategoriesSerializer, CommentSerializer,
+                             GenresSerializer, MyTokenObtainPairSerializer,
+                             ReviewSerializer, TitleReadSerializer,
+                             TitleWriteSerializer, UserRegistrationSerializer,
+                             UsersSerializer)
+from api.service import send_email
+from api.utils import get_model_obj
 from reviews.models import Category, Genre, Review, Title
 
-from .filters import TitleFilter
-from .permissions import AdminAccess, CommentReviewPermission, ReaderOrAdmin
-from .serializers import (CategoriesSerializer, CommentSerializer,
-                          GenresSerializer, MyTokenObtainPairSerializer,
-                          ReviewSerializer, TitleReadSerializer,
-                          TitleWriteSerializer, UserRegistrationSerializer,
-                          UsersSerializer)
-from .service import send_email
-from .mixins import CategoryGenreMixin
-from django.db import models
-
 User = get_user_model()
-
-
-def get_model_obj(self, model: models.Model, key: str) -> models.Model or None:
-    id = self.kwargs.get(key)
-    return get_object_or_404(model, pk=id)
-
-
-def get_review_obj(self, key: str) -> models.Model or None:
-    title = get_model_obj(self, Title, "title_id")
-    review_id = self.kwargs.get(key)
-    return get_object_or_404(Review, id=review_id, title=title)
 
 
 class GenreViewSet(CategoryGenreMixin):
@@ -117,17 +105,22 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (CommentReviewPermission, IsAuthenticatedOrReadOnly)
     http_method_names = ("get", "post", "patch", "delete")
 
+    def get_review_obj(self):
+        title = get_model_obj(self, Title, "title_id")
+        review_id = self.kwargs.get("review_id")
+        return get_object_or_404(Review, id=review_id, title=title)
+
     def perform_create(self, serializer):
         """
         Выполняет создание комментария.
         """
 
-        review = get_review_obj(self, "review_id")
+        review = self.get_review_obj()
         serializer.save(review=review, author=self.request.user)
 
     def get_queryset(self):
 
-        review = get_review_obj(self, "review_id")
+        review = self.get_review_obj()
         return review.comments.all()
 
 

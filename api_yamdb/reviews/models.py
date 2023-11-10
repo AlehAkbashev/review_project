@@ -1,13 +1,10 @@
-from django.contrib.auth import get_user_model
 from django.conf import settings as s
+from django.contrib.auth import get_user_model
 from django.db import models
 
-from .abstract_models import (
-    CommonDataAbstractModel,
-    CommonDataAbstractModelTwo
-)
-
-from .validators import validate_year
+from reviews.abstract_models import (CommonDataAbstractModel,
+                                     CommonDataAbstractModelTwo)
+from reviews.validators import validate_year
 
 User = get_user_model()
 

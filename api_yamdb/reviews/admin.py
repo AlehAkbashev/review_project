@@ -5,7 +5,7 @@ from django.db.models.query import QuerySet
 from django.http.request import HttpRequest
 from django.template.defaultfilters import truncatewords
 
-from .models import Category, Comment, Genre, Review, Title, TitleGenre
+from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 
 
 class TitleGenreInline(admin.TabularInline):
@@ -53,12 +53,9 @@ class TitleAdmin(admin.ModelAdmin):
     def get_genre(self, obj):
         return "\n".join([genre.name for genre in obj.genre.all()])
 
-    def get_description(self, obj):
-        return truncatewords(obj.description, 5)
-
     @admin.display(description='description')
     def get_description(self, obj):
-        return obj.description
+        return truncatewords(obj.description, 5)
 
 
 @admin.register(Category)
