@@ -80,10 +80,10 @@ class CommentReviewPermission(permissions.BasePermission):
         - bool: True, если доступ разрешен, иначе False.
         """
         return request.method in permissions.SAFE_METHODS or (
-                request.user.is_authenticated
-                and (
-                        request.user == obj.author
-                        or request.user.is_admin
-                        or request.user.is_moderator
-                )
+            request.user.is_authenticated
+            and (
+                request.user == obj.author
+                or request.user.is_admin
+                or request.user.is_moderator
+            )
         )
