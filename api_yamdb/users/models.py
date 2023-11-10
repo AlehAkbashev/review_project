@@ -1,9 +1,7 @@
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings as s
+from django.core.validators import RegexValidator
 from django.db import models
-
-from api_yamdb.settings import (ADMIN_ROLE, EMAIL_MAX_LENGTH, MODERATOR_ROLE,
-                                ROLE_MAX_LENGTH, USER_ROLE,
-                                USERNAME_MAX_LENGTH)
 
 from .validators import validate_username
 
@@ -15,21 +13,27 @@ class User(AbstractUser):
     """
 
     CHOICES = (
-        (USER_ROLE, "user"),
-        (MODERATOR_ROLE, "moderator"),
-        (ADMIN_ROLE, "admin"),
+        (s.USER_ROLE, "user"),
+        (s.MODERATOR_ROLE, "moderator"),
+        (s.ADMIN_ROLE, "admin"),
     )
 
-    email = models.EmailField(unique=True, max_length=EMAIL_MAX_LENGTH)
-    username = models.SlugField(
+    email = models.EmailField(
         unique=True,
-        max_length=USERNAME_MAX_LENGTH,
-        validators=[validate_username],
+        max_length=s.EMAIL_MAX_LENGTH
     )
-    bio = models.TextField(blank=True, verbose_name="Биография")
+    username = models.CharField(
+        unique=True,
+        max_length=s.USERNAME_MAX_LENGTH,
+        validators=[validate_username,
+                    RegexValidator(regex=r"^[\w.@+-]+\Z")],
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name="Биография")
     role = models.SlugField(
-        max_length=ROLE_MAX_LENGTH,
-        default=USER_ROLE,
+        max_length=s.ROLE_MAX_LENGTH,
+        default=s.USER_ROLE,
         verbose_name="Role",
         choices=CHOICES,
     )
@@ -46,7 +50,7 @@ class User(AbstractUser):
         или если пользователь является
         суперпользователем или стаффом, иначе False.
         """
-        return self.role == "admin" or self.is_superuser or self.is_staff
+        return self.role == s.ADMIN_ROLE or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):
@@ -54,15 +58,7 @@ class User(AbstractUser):
         Проверяет, является ли пользователь модератором.
         Возвращает True, если роль пользователя равна "moderator", иначе False.
         """
-        return self.role == "moderator"
-
-    @property
-    def is_user(self):
-        """
-        Проверяет, является ли пользователь обычным пользователем.
-        Возвращает True, если роль пользователя равна "user", иначе False.
-        """
-        return self.role == "user"
+        return self.role == s.MODERATOR_ROLE
 
     def __str__(self) -> str:
         """

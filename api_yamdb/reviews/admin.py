@@ -56,7 +56,9 @@ class TitleAdmin(admin.ModelAdmin):
     def get_description(self, obj):
         return truncatewords(obj.description, 5)
 
-    get_description.short_description = "description"
+    @admin.display(description='description')
+    def get_description(self, obj):
+        return obj.description
 
 
 @admin.register(Category)
@@ -76,7 +78,6 @@ class GenreAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("title", "text", "author", "score", "pub_date")
-
     list_editable = ("text", "author", "score")
     list_filter = ("title", "author", "score")
     inlines = [CommentInline]
@@ -86,7 +87,6 @@ class ReviewAdmin(admin.ModelAdmin):
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ("id", "author", "text", "review", "pub_date")
-
     list_editable = ("text", "author")
     search_fields = ("review__text", "author__username", "text")
     list_display_links = ("review",)
