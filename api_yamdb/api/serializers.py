@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-
-from api_yamdb.settings import EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH
+from django.conf import settings
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -28,52 +27,6 @@ class CategoriesSerializer(serializers.ModelSerializer):
         model = Category
 
 
-class CategoryField(serializers.RelatedField):
-    """
-    Поле для сериализации категории.
-    """
-
-    class Meta:
-        fields = ("name", "slug")
-        model = Category
-
-    def to_representation(self, instance):
-        return {"name": instance.name, "slug": instance.slug}
-
-    def to_internal_value(self, data):
-        try:
-            category_obj = Category.objects.get(slug=data)
-        except Category.DoesNotExist:
-            raise serializers.ValidationError("This category does not exist")
-        return category_obj
-
-    def get_queryset(self):
-        return Category.objects.all()
-
-
-class GenreField(serializers.RelatedField):
-    """
-    Поле для сериализации жанра.
-    """
-
-    class Meta:
-        fields = ("name", "slug")
-        model = Genre
-
-    def to_representation(self, instance):
-        return {"name": instance.name, "slug": instance.slug}
-
-    def to_internal_value(self, data):
-        try:
-            genre_obj = Genre.objects.get(slug=data)
-        except Genre.DoesNotExist:
-            raise serializers.ValidationError("This genre does not exist")
-        return {"name": genre_obj.name, "slug": genre_obj.slug}
-
-    def get_queryset(self):
-        return Genre.objects.all()
-
-
 class TitleWriteSerializer(serializers.ModelSerializer):
     """
     Сериализатор для записи произведений.
@@ -85,14 +38,12 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(), slug_field="slug", many=True
     )
-    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = (
             "id",
             "name",
             "year",
-            "rating",
             "description",
             "genre",
             "category",
@@ -100,15 +51,8 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         model = Title
 
     def to_representation(self, instance):
-        category = instance.category
-        genres = instance.genre.all()
-        genres_list = []
-        for genre in genres:
-            genres_list.append({"name": genre.name, "slug": genre.slug})
-        title = super().to_representation(instance)
-        title["genre"] = genres_list
-        title["category"] = {"name": category.name, "slug": category.slug}
-        return title
+        title = TitleReadSerializer(instance)
+        return title.data
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
@@ -116,13 +60,9 @@ class TitleReadSerializer(serializers.ModelSerializer):
     Сериализатор для чтения произведений.
     """
 
-    category = serializers.SlugRelatedField(
-        read_only=True, slug_field="slug_name"
-    )
-    genre = serializers.SlugRelatedField(
-        read_only=True, slug_field="slug_name", many=True
-    )
-    rating = serializers.IntegerField(read_only=True)
+    category = CategoriesSerializer()
+    genre = GenresSerializer(many=True)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = (
@@ -183,18 +123,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "You cannot write more than one review on the same title"
                 )
-            return data
-        if self.context["request"].method == "PATCH":
-            return data
-
-    def update(self, instance, validated_data):
-        """
-        Обновляет экземпляр модели Review.
-        """
-        instance.text = self.validated_data.get("text", instance.text)
-        instance.score = self.validated_data.get("score", instance.score)
-        instance.save()
-        return instance
+        return data
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -231,9 +160,13 @@ class UserRegistrationSerializer(serializers.Serializer):
     """
 
     username = serializers.SlugField(
-        max_length=USERNAME_MAX_LENGTH, required=True
+        max_length=settings.USERNAME_MAX_LENGTH,
+        required=True
     )
-    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH, required=True)
+    email = serializers.EmailField(
+        max_length=settings.EMAIL_MAX_LENGTH,
+        required=True
+    )
 
     def validate_username(self, value):
         if value == "me":
@@ -266,6 +199,6 @@ class UserRegistrationSerializer(serializers.Serializer):
 
 class MyTokenObtainPairSerializer(serializers.Serializer):
     username = serializers.SlugField(
-        max_length=USERNAME_MAX_LENGTH, required=True
+        max_length=settings.USERNAME_MAX_LENGTH, required=True
     )
     confirmation_code = serializers.CharField(required=True)

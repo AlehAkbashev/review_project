@@ -7,9 +7,7 @@ User = get_user_model()
 class ReaderOrAdmin(permissions.BasePermission):
     """
     Права доступа для чтения или администратора.
-
     Разрешает доступ только для чтения (GET) или для администратора.
-
     Methods:
     - has_permission: Проверяет разрешение доступа на уровне представления.
     - has_object_permission: Проверяет разрешение доступа на уровне объекта.
@@ -18,17 +16,17 @@ class ReaderOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         """
         Проверяет разрешение доступа на уровне представления.
-
         Parameters:
         - request: Запрос пользователя.
         - view: Представление, к которому выполняется запрос.
-
         Returns:
         - bool: True, если доступ разрешен, иначе False.
         """
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in permissions.SAFE_METHODS or (
+                request.user.is_authenticated
+                and request.user.is_admin
+        ):
             return True
-        return request.user.is_authenticated and request.user.is_admin
 
 
 class AdminAccess(permissions.BasePermission):
