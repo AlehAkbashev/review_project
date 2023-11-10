@@ -21,9 +21,15 @@ class Category(CommonDataAbstractModel):
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
+
+    def __str__(self):
+        return self.name
+    
+   
     @property
     def slug_name(self):
         return {"name": self.name, "slug": self.slug}
+
 
 
 class Genre(CommonDataAbstractModel):
@@ -37,10 +43,6 @@ class Genre(CommonDataAbstractModel):
 
     def __str__(self):
         return self.name[:s.OBJECT_MAX_LENGTH]
-
-    @property
-    def slug_name(self):
-        return {"name": self.name, "slug": self.slug}
 
 
 class Title(models.Model):
