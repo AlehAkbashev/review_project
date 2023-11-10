@@ -1,4 +1,3 @@
-from django.conf import settings as s
 from django.db import models
 
 from reviews.abstract_models import (
