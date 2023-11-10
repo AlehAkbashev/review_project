@@ -1,5 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.conf import settings as s
 from django.db import models
+
+User = get_user_model()
 
 
 class CommonDataAbstractModel(models.Model):
@@ -37,6 +40,12 @@ class CommonDataAbstractModelTwo(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name="comment_pub_date"
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="review_author",
+        related_name="reviews",
     )
 
     class Meta:

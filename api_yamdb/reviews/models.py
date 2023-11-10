@@ -1,15 +1,11 @@
-from django.contrib.auth import get_user_model
 from django.conf import settings as s
 from django.db import models
 
-from .abstract_models import (
+from reviews.abstract_models import (
     CommonDataAbstractModel,
     CommonDataAbstractModelTwo
 )
-
-from .validators import validate_year
-
-User = get_user_model()
+from reviews.validators import validate_year
 
 
 class Category(CommonDataAbstractModel):
@@ -23,10 +19,6 @@ class Category(CommonDataAbstractModel):
 
     def __str__(self):
         return self.name
-
-    @property
-    def slug_name(self):
-        return {"name": self.name, "slug": self.slug}
 
 
 class Genre(CommonDataAbstractModel):
@@ -116,12 +108,6 @@ class Review(CommonDataAbstractModelTwo):
         verbose_name="review_title",
         related_name="reviews",
     )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name="review_author",
-        related_name="reviews",
-    )
     score = models.PositiveSmallIntegerField(
         verbose_name="review_score",
         choices=[(i, i) for i in range(1, 11)]
@@ -148,12 +134,6 @@ class Comment(CommonDataAbstractModelTwo):
         on_delete=models.CASCADE,
         verbose_name="comment_review",
         related_name="comments"
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name="comment_author",
-        related_name="comments",
     )
 
     class Meta:
