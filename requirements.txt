@@ -15,6 +15,7 @@ mccabe==0.7.0
 mypy-extensions==1.0.0
 packaging==23.2
 pathspec==0.11.2
+pip==23.3.1
 platformdirs==3.11.0
 pluggy==0.13.1
 py==1.11.0
@@ -27,7 +28,8 @@ pytest-pythonpath==0.7.3
 pytils==0.4.1
 pytz==2023.3.post1
 requests==2.26.0
+rest-framework-simplejwt==0.0.2
+setuptools==68.1.2
 sqlparse==0.4.4
 toml==0.10.2
 urllib3==1.26.18
-rest-framework-simplejwt==0.0.2
