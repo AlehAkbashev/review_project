@@ -1,5 +1,6 @@
-from rest_framework import mixins, viewsets, filters
-from .permissions import ReaderOrAdmin
+from rest_framework import filters, mixins, viewsets
+
+from api.permissions import ReaderOrAdmin
 
 
 class CategoryGenreMixin(
